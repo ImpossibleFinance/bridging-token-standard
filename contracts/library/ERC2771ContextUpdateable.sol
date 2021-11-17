@@ -10,12 +10,12 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
  *      and removed constructor.
  */
 abstract contract ERC2771ContextUpdateable is AccessControlEnumerable {
-    address public _trustedForwarder;
+    address public trustedForwarder;
 
     event TrustedForwarderChanged(address indexed trustedForwarder, address indexed actor);
 
     function isTrustedForwarder(address forwarder) public view returns (bool) {
-        return forwarder == _trustedForwarder;
+        return forwarder == trustedForwarder;
     }
 
     function _msgSender() internal view virtual override returns (address sender) {
@@ -38,10 +38,10 @@ abstract contract ERC2771ContextUpdateable is AccessControlEnumerable {
         }
     }
 
-    function setTrustedForwarder(address trustedForwarder) external {
+    function setTrustedForwarder(address _trustedForwarder) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
 
-        _trustedForwarder = trustedForwarder;
+        trustedForwarder = _trustedForwarder;
         emit TrustedForwarderChanged(trustedForwarder, msg.sender);
     }
 }

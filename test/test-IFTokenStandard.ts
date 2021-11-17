@@ -35,4 +35,11 @@ describe("IFTokenStandard", function () {
     // check balance
     expect(await testToken.balanceOf(owner.address)).to.equal("1500000000000000000")
   })
+
+  it("Trusted forwarder", async function () {
+    // set trusted forwarder
+    await testToken.setTrustedForwarder(owner.address)
+    // check balance
+    expect(await testToken.trustedForwarder()).to.equal(owner.address)
+  })
 })
