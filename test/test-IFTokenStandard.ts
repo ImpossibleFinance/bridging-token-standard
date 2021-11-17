@@ -39,7 +39,7 @@ describe("IFTokenStandard", function () {
   it("Trusted forwarder", async function () {
     // set trusted forwarder
     await testToken.setTrustedForwarder(owner.address)
-    // check balance
+    // check trusted forwarder
     expect(await testToken.trustedForwarder()).to.equal(owner.address)
   })
 })
