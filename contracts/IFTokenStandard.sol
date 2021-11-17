@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 import "./library/ERC2771ContextUpdateable.sol";
+import "./library/draft-ERC1363/draft-ERC1363.sol";
 
-contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit {
+contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit, ERC1363 {
     // constants
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
