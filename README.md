@@ -15,3 +15,9 @@ Meta-transactions are supported using Biconomy Mexa.
 # IFTokenStandard token
 NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.ts --network bsc_test
 ```
+
+### Minting token
+
+```
+TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
+```
