@@ -2,6 +2,16 @@
 
 This repo contains the source code for IF and IDIA tokens.
 
-The project uses the [Anyswap token standard V5](https://github.com/connext/chaindata) as a base.
+The token supports bridging:
 
-We further integrate meta-transaction functionality using Biconomy Mexa.
+- [Anyswap V5](https://github.com/connext/chaindata)
+- [Polygon PoS bridge](https://github.com/maticnetwork/pos-portal)
+
+Meta-transactions are supported using Biconomy Mexa.
+
+## Deploying
+
+```
+# IFTokenStandard token
+NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.ts --network bsc_test
+```

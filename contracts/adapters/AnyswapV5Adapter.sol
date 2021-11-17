@@ -49,10 +49,16 @@ contract AnyswapV5Adapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateabl
         chainIdToDcrm[chainId] = dcrmAddress;
     }
 
+    // todo: _beforeTokenTransfer override
+
     // bridge (custom adapter)
     function bridge(uint256 amount, uint256 chainId) public returns (bool) {
         underlyingToken.safeTransferFrom(_msgSender(), address(this), amount);
-        _mint(chainIdToDcrm[chainId], amount);
+        // must first mint to this contract, then transfer to dcrm address
+        // so dcrm picks up correct origin address from event
+        _mint(address(this), amount);
+        underlyingToken.transfer(chainIdToDcrm[chainId], amount);
+
         emit Bridge(_msgSender(), amount);
         return true;
     }
