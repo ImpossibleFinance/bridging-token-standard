@@ -52,12 +52,17 @@ describe("IFTokenStandard", function () {
   })
 
   it("Can transfer and call", async function () {
+    // deploy mock 1363 compatible contract
+    const MockERC1363PayableContractFactory = await ethers.getContractFactory("MockERC1363PayableContract")
+    const mockERC1363PayableContract = await MockERC1363PayableContractFactory.deploy(testToken.address)
+    await mockERC1363PayableContract.deployed()
+
     // mint
     await testToken.mint(owner.address, "1000000000000000000")
     // transfer and call (with no additional data)
-    await testToken["transferAndCall(address,uint256)"](testToken.address, "1000000000000000000")
+    await testToken["transferAndCall(address,uint256)"](mockERC1363PayableContract.address, "1000000000000000000")
     // check balances
-    // expect(await testToken.balanceOf(owner.address)).to.equal("0")
-    // expect(await testToken.balanceOf(testToken.address)).to.equal("1000000000000000000")
+    expect(await testToken.balanceOf(owner.address)).to.equal("0")
+    expect(await testToken.balanceOf(mockERC1363PayableContract.address)).to.equal("1000000000000000000")
   })
 })
