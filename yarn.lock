@@ -627,7 +627,7 @@
     "@types/sinon-chai" "^3.2.3"
     "@types/web3" "1.0.19"
 
-"@openzeppelin/contracts@^4.3.2":
+"@openzeppelin/contracts@4.3.2", "@openzeppelin/contracts@^4.3.2":
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.2.tgz#ff80affd6d352dbe1bbc5b4e1833c41afd6283b6"
   integrity sha512-AybF1cesONZStg5kWf6ao9OlqTZuPqddvprc0ky7lrUVOjXeKpmQ2Y9FK+6ygxasb+4aic4O5pneFBfwVsRRRg==
@@ -3258,6 +3258,13 @@ env-paths@^2.2.0:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/env-paths/-/env-paths-2.2.1.tgz#420399d416ce1fbe9bc0a07c62fa68d67fd0f8f2"
   integrity sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==
+
+erc-payable-token@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/erc-payable-token/-/erc-payable-token-4.3.1.tgz#bf16b6e2b0c765473a1b6b8ea6efe9b4fa83d338"
+  integrity sha512-bpubhz09QLcnCh6dmo/sV8maKmdzRbteDDiIOM7tfee5QFtL6rLisVTOh4lKHN3FWpdpqN1VfU2uSuvCE8SJeQ==
+  dependencies:
+    "@openzeppelin/contracts" "4.3.2"
 
 errno@~0.1.1:
   version "0.1.8"

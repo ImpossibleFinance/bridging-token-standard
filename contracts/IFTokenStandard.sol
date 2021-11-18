@@ -4,9 +4,9 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "erc-payable-token/contracts/token/ERC1363/ERC1363.sol";
 
 import "./library/ERC2771ContextUpdateable.sol";
-import "./library/draft-ERC1363/draft-ERC1363.sol";
 
 contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit, ERC1363 {
     // constants
@@ -31,5 +31,16 @@ contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit
 
     function _msgData() internal view override(Context, ERC2771ContextUpdateable) returns (bytes calldata) {
         return ERC2771ContextUpdateable._msgData();
+    }
+
+    //// EIP1363 payable token
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControlEnumerable, ERC1363)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1363).interfaceId || super.supportsInterface(interfaceId);
     }
 }

@@ -2,12 +2,15 @@
 
 This repo contains the source code for IF and IDIA tokens.
 
-The token supports bridging:
+The token supports the following bridges via our adapters:
 
 - [Anyswap V5](https://github.com/connext/chaindata)
 - [Polygon PoS bridge](https://github.com/maticnetwork/pos-portal)
 
-Meta-transactions are supported using Biconomy Mexa.
+Additional features:
+
+- Meta-transactions are supported using [Biconomy Mexa](https://docs.biconomy.io/products/enable-gasless-transactions)
+- EIP1363 (payable token) is supported via the [official reference implementation library](https://github.com/vittominacori/erc1363-payable-token)
 
 ## Deploying
 

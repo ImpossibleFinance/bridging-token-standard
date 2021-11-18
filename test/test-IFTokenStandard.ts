@@ -36,10 +36,28 @@ describe("IFTokenStandard", function () {
     expect(await testToken.balanceOf(owner.address)).to.equal("1500000000000000000")
   })
 
-  it("Trusted forwarder", async function () {
+  it("Can set trusted forwarder", async function () {
     // set trusted forwarder
     await testToken.setTrustedForwarder(owner.address)
     // check trusted forwarder
     expect(await testToken.trustedForwarder()).to.equal(owner.address)
+  })
+
+  it("Can check mint role", async function () {
+    // get role
+    const minterRole = await testToken.MINTER_ROLE()
+    console.log(minterRole)
+    // check role
+    expect(await testToken.getRoleMemberCount(minterRole)).to.equal(1)
+  })
+
+  it("Can transfer and call", async function () {
+    // mint
+    await testToken.mint(owner.address, "1000000000000000000")
+    // transfer and call (with no additional data)
+    await testToken["transferAndCall(address,uint256)"](testToken.address, "1000000000000000000")
+    // check balances
+    // expect(await testToken.balanceOf(owner.address)).to.equal("0")
+    // expect(await testToken.balanceOf(testToken.address)).to.equal("1000000000000000000")
   })
 })
