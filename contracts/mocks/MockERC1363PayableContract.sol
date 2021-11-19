@@ -28,9 +28,9 @@ contract MockERC1363PayableContract is ERC1363Payable {
     }
 
     function _transferReceived(
-        address operator,
-        address sender,
-        uint256 amount,
+        address _operator,
+        address _sender,
+        uint256 _amount,
         bytes memory data
     ) internal override {
         bytes4 fnSig;

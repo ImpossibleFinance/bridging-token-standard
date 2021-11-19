@@ -3,11 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-  ],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
   plugins: ["@typescript-eslint"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -16,7 +12,7 @@ module.exports = {
   },
   rules: {
     "linebreak-style": ["error", "unix"],
-    "no-unused-vars": "off",
+    "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     quotes: ["error", "double"],
     semi: ["error", "never"],
