@@ -68,12 +68,11 @@ describe("IFTokenStandard", function () {
     expect(await mockERC1363PayableContract.foo()).to.equal(0)
 
     // transfer and call (with additional data)
-    const result = await testToken["transferAndCall(address,uint256,bytes)"](
+    await testToken["transferAndCall(address,uint256,bytes)"](
       mockERC1363PayableContract.address,
       "1000000000000000000",
       erc1363PayableInterface.encodeFunctionData("setFoo", [1234])
     )
-    result.wait()
 
     // foo should update
     expect(await mockERC1363PayableContract.foo()).to.equal(1234)
