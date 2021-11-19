@@ -56,8 +56,6 @@ describe("IFTokenStandard", function () {
     // get interface of mock payable (1363) contract
     const erc1363PayableInterface = new ethers.utils.Interface(MockERC1363PayableMetadata.abi)
 
-    console.log(erc1363PayableInterface.encodeFunctionData("setFoo", [1234]))
-
     // deploy mock payable (1363) contract
     const MockERC1363PayableContractFactory = await ethers.getContractFactory("MockERC1363PayableContract")
     const mockERC1363PayableContract = await MockERC1363PayableContractFactory.deploy(testToken.address)
@@ -65,6 +63,10 @@ describe("IFTokenStandard", function () {
 
     // mint
     await testToken.mint(owner.address, "1000000000000000000")
+
+    // foo starts at 0
+    expect(await mockERC1363PayableContract.foo()).to.equal(0)
+
     // transfer and call (with additional data)
     const result = await testToken["transferAndCall(address,uint256,bytes)"](
       mockERC1363PayableContract.address,
@@ -72,6 +74,8 @@ describe("IFTokenStandard", function () {
       erc1363PayableInterface.encodeFunctionData("setFoo", [1234])
     )
     result.wait()
+
+    // foo should update
     expect(await mockERC1363PayableContract.foo()).to.equal(1234)
 
     // check balances
