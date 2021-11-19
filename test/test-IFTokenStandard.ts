@@ -3,6 +3,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
 import { ethers } from "hardhat"
 
+import MockERC1363PayableMetadata from "../artifacts/contracts/mocks/MockERC1363PayableContract.sol/MockERC1363PayableContract.json"
+
 describe("IFTokenStandard", function () {
   // unset timeout from the test
   this.timeout(0)
@@ -46,21 +48,32 @@ describe("IFTokenStandard", function () {
   it("Can check mint role", async function () {
     // get role
     const minterRole = await testToken.MINTER_ROLE()
-    console.log(minterRole)
     // check role
     expect(await testToken.getRoleMemberCount(minterRole)).to.equal(1)
   })
 
   it("Can transfer and call", async function () {
-    // deploy mock 1363 compatible contract
+    // get interface of mock payable (1363) contract
+    const erc1363PayableInterface = new ethers.utils.Interface(MockERC1363PayableMetadata.abi)
+
+    console.log(erc1363PayableInterface.encodeFunctionData("setFoo", [1234]))
+
+    // deploy mock payable (1363) contract
     const MockERC1363PayableContractFactory = await ethers.getContractFactory("MockERC1363PayableContract")
     const mockERC1363PayableContract = await MockERC1363PayableContractFactory.deploy(testToken.address)
     await mockERC1363PayableContract.deployed()
 
     // mint
     await testToken.mint(owner.address, "1000000000000000000")
-    // transfer and call (with no additional data)
-    await testToken["transferAndCall(address,uint256)"](mockERC1363PayableContract.address, "1000000000000000000")
+    // transfer and call (with additional data)
+    const result = await testToken["transferAndCall(address,uint256,bytes)"](
+      mockERC1363PayableContract.address,
+      "1000000000000000000",
+      erc1363PayableInterface.encodeFunctionData("setFoo", [1234])
+    )
+    result.wait()
+    expect(await mockERC1363PayableContract.foo()).to.equal(1234)
+
     // check balances
     expect(await testToken.balanceOf(owner.address)).to.equal("0")
     expect(await testToken.balanceOf(mockERC1363PayableContract.address)).to.equal("1000000000000000000")
