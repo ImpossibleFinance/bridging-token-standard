@@ -8,12 +8,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "../library/ERC2771ContextUpdateable.sol";
 
 /**
- * @dev Anyswap V5 bridge mint/burn adapter
+ * @dev Anyswap V5 bridge mint/burn adapter, written by IF.
  *
  *      For reference: https://github.com/connext/chaindata/blob/main/AnyswapV5ERC20.sol
  */
 /* solhint-disable not-rely-on-time */
-contract AnyswapV5Adapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateable {
+contract AnyswapV5BridgeAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateable {
     using SafeERC20 for ERC20;
 
     // roles

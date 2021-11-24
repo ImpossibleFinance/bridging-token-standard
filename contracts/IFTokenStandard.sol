@@ -41,6 +41,6 @@ contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit
         override(AccessControlEnumerable, ERC1363)
         returns (bool)
     {
-        return interfaceId == type(IERC1363).interfaceId || super.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
 }
