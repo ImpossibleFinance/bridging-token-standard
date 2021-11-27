@@ -92,15 +92,10 @@ describe("Test AnyswapV5RouterAdapter", function () {
     )
   })
 
-  // it("Mint", async function () {
-  //   // mint
-  //   // todo: fix params
-  //   routerAdapter.mint(owner.address, "100")
-  // })
-
-  // it("Burn", async function () {
-  //   // burn
-  //   // todo: fix params
-  //   routerAdapter.burn(owner.address, "100")
-  // })
+  it("Mint and burn", async function () {
+    // mint
+    routerAdapter.mint(owner.address, "100")
+    // burn
+    routerAdapter.burn(owner.address, "100")
+  })
 })

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 import "../library/ERC2771ContextUpdateable.sol";
@@ -16,7 +16,7 @@ import "../library/FlowLimiter.sol";
  *          Anyswap V5 Router: https://github.com/anyswap/anyswap-v1-core/blob/master/contracts/AnyswapV5Router.sol
  */
 /* solhint-disable not-rely-on-time */
-contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
+contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
     using SafeERC20 for ERC20;
 
     // CONSTS
