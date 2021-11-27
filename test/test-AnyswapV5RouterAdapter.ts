@@ -134,4 +134,57 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token.balanceOf(routerV4.address)).to.equal(0)
     expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
   })
+
+  it("High level: V4 anySwapInAuto (adapter underlying balance < amount)", async function () {
+    // set rate limiter params
+    await routerAdapter.setMaxQuota("1000") // 10e18
+    await routerAdapter.setQuotaPerSecond("100") // 10e17
+
+    // call anySwapOutUnderlying (transfer onto bridge)
+    routerV4.anySwapInAuto(
+      "0x0000000000000000000000000000000000000000000000000000000000000000", // txs (transaction hash from origin chain)
+      routerAdapter.address, // router adapter token
+      owner.address, // to
+      "100", // amount
+      1 // from chain ID
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(owner.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(owner.address)).to.equal(100)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+    // check final balances on router
+    expect(await token.balanceOf(routerV4.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
+  })
+
+  it("High level: V4 anySwapInAuto (adapter underlying balance >= amount)", async function () {
+    // set rate limiter params
+    await routerAdapter.setMaxQuota("1000") // 10e18
+    await routerAdapter.setQuotaPerSecond("100") // 10e17
+
+    // mint underlying token to adapter
+    token.mint(routerAdapter.address, "100")
+
+    // call anySwapOutUnderlying (transfer onto bridge)
+    routerV4.anySwapInAuto(
+      "0x0000000000000000000000000000000000000000000000000000000000000000", // txs (transaction hash from origin chain)
+      routerAdapter.address, // router adapter token
+      owner.address, // to
+      "100", // amount
+      1 // from chain ID
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(owner.address)).to.equal(100)
+    expect(await routerAdapter.balanceOf(owner.address)).to.equal(0)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+    // check final balances on router
+    expect(await token.balanceOf(routerV4.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
+  })
 })
