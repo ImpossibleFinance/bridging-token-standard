@@ -13,7 +13,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
   // vars for all tests
   let owner: SignerWithAddress
   let token: Contract
-  let router: Contract
+  let routerV4: Contract
   let routerAdapter: Contract
 
   this.beforeEach(async () => {
@@ -27,20 +27,20 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
     // deploy AnyswapV4Router
     const AnyswapV4RouterFactory = await ethers.getContractFactory("AnyswapV4Router")
-    router = await AnyswapV4RouterFactory.deploy(
+    routerV4 = await AnyswapV4RouterFactory.deploy(
       // todo: fill in if necessary
       owner.address, // sushiswap factory address
       owner.address, // address of wrapped native token (e.g., WETH)
       owner.address // address of MPC, the admin address that calls anySwapIn
     )
-    await router.deployed()
+    await routerV4.deployed()
 
     // deploy AnyswapV5RouterAdapter
     const AnyswapV5RouterAdapterFactory = await ethers.getContractFactory("AnyswapV5RouterAdapter")
     routerAdapter = await AnyswapV5RouterAdapterFactory.deploy(
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
-      router.address, // router
+      routerV4.address, // router
       token.address // underlying
     )
     await routerAdapter.deployed()
@@ -48,7 +48,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
     // grant router role to owner
     await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), owner.address)
     // grant router role to router
-    await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), router.address)
+    await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), routerV4.address)
   })
 
   //// low level tests from router adapter
@@ -114,10 +114,10 @@ describe("Test AnyswapV5RouterAdapter", function () {
     token.mint(owner.address, "100")
 
     // tester approves to router
-    token.approve(router.address, "100")
+    token.approve(routerV4.address, "100")
 
     // call anySwapOutUnderlying (transfer onto bridge)
-    router.anySwapOutUnderlying(
+    routerV4.anySwapOutUnderlying(
       routerAdapter.address, // router adapter token
       owner.address, // to
       "100", // amount
@@ -131,7 +131,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token.balanceOf(routerAdapter.address)).to.equal(100)
     expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
     // check final balances on router
-    expect(await token.balanceOf(router.address)).to.equal(0)
-    expect(await routerAdapter.balanceOf(router.address)).to.equal(0)
+    expect(await token.balanceOf(routerV4.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
   })
 })
