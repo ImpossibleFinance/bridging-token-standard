@@ -3,6 +3,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
 import { ethers } from "hardhat"
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { expectRevert } = require("@openzeppelin/test-helpers")
+
 describe("Test AnyswapV5RouterAdapter", function () {
   // unset timeout from the test
   this.timeout(0)
@@ -42,34 +45,55 @@ describe("Test AnyswapV5RouterAdapter", function () {
     )
     await routerAdapter.deployed()
 
-    // set rate limiter params
-    await routerAdapter.setMaxQuota("1000000000000000000") // 10e18
-    await routerAdapter.setQuotaPerSecond("1000000000000000000") // 10e17
-
     // grant router role to owner
     await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), owner.address)
   })
 
   it("Deposit vault", async function () {
-    // deposit vault
-    routerAdapter.depositVault("100", owner.address)
+    // set rate limiter params
+    await routerAdapter.setMaxQuota("1000") // 10e18
+    await routerAdapter.setQuotaPerSecond("100") // 10e17
+
+    // mint tokens
+    await token.mint(owner.address, "2000")
+
+    // deposit vault (mint router adapter token to caller)
+    await routerAdapter.depositVault("100", owner.address)
+
+    // deposit vault (mint router adapter token to caller)
+    await routerAdapter.depositVault("1100", owner.address)
+
+    // deposit vault (mint router adapter token to caller)
+    await routerAdapter.depositVault("100", owner.address)
+
+    // deposit vault (mint router adapter token to caller) (should revert for exceeding rate limiter quota)
+    expectRevert.unspecified(routerAdapter.depositVault("101", owner.address))
+
+    // check final balance
+    expect(await routerAdapter.balanceOf(owner.address)).to.equal(1300)
   })
 
   it("Withdraw vault", async function () {
+    // mint underlying token
+    token.mint(owner.address, "100")
+
     // withdraw vault
-    // todo: fix params
-    routerAdapter.withdrawVault(owner.address, "100", owner.address)
+    routerAdapter.withdrawVault(
+      owner.address, // from
+      "100", // amount
+      owner.address // to
+    )
   })
 
-  it("Mint", async function () {
-    // mint
-    // todo: fix params
-    routerAdapter.mint(owner.address, "100")
-  })
+  // it("Mint", async function () {
+  //   // mint
+  //   // todo: fix params
+  //   routerAdapter.mint(owner.address, "100")
+  // })
 
-  it("Burn", async function () {
-    // burn
-    // todo: fix params
-    routerAdapter.burn(owner.address, "100")
-  })
+  // it("Burn", async function () {
+  //   // burn
+  //   // todo: fix params
+  //   routerAdapter.burn(owner.address, "100")
+  // })
 })
