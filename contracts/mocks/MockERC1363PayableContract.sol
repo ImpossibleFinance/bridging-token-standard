@@ -14,6 +14,7 @@ import "erc-payable-token/contracts/payment/ERC1363Payable.sol";
  * @author Vittorio Minacori (https://github.com/vittominacori)
  * @dev Implementation proposal of a contract that wants to accept ERC1363 payments
  */
+// solhint-disable no-unused-vars
 contract MockERC1363PayableContract is ERC1363Payable {
     uint256 public foo;
 

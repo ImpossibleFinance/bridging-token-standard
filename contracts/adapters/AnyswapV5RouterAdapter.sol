@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 import "../library/ERC2771ContextUpdateable.sol";
+import "../library/FlowLimiter.sol";
 
 /**
  * @dev Anyswap V5 router adapter, written by IF.
@@ -15,17 +16,21 @@ import "../library/ERC2771ContextUpdateable.sol";
  *          Anyswap V5 Router: https://github.com/anyswap/anyswap-v1-core/blob/master/contracts/AnyswapV5Router.sol
  */
 /* solhint-disable not-rely-on-time */
-contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateable {
+contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
     using SafeERC20 for ERC20;
 
-    // constants
+    // CONSTS
+
     bytes32 public constant ROUTER_ROLE = keccak256("ROUTER_ROLE");
+
+    // VARS
 
     // address of AnyswapV5Router contract
     address public immutable router;
     // underlying currency
     address public immutable underlying;
 
+    // constructor
     constructor(
         string memory _name,
         string memory _symbol,
@@ -34,6 +39,8 @@ contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpd
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
         router = _router;
         underlying = _underlying;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     //// fns called by router
@@ -43,7 +50,14 @@ contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpd
     function depositVault(uint256 amount, address to) external returns (uint256) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
         require(underlying != address(0x0) && underlying != address(this), "Underlying invalid");
+
+        // consume flow quota (rate limit)
+        consumeUserQuota(to, FlowDirection.OUT, amount);
+
+        // mint adapter token
         _mint(to, amount);
+
+        // return
         return amount;
     }
 
@@ -55,23 +69,39 @@ contract AnyswapV5RouterAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpd
         address to
     ) external returns (uint256) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // consume flow quota (rate limit)
+        consumeUserQuota(to, FlowDirection.IN, amount);
+
+        // burn adapter token
         _burn(from, amount);
+        // transfer underlying to user
         ERC20(underlying).safeTransfer(to, amount);
+
+        // return
         return amount;
     }
 
     // to support _anySwapIn (transferring off of bridge) (dest chain)
     function mint(address to, uint256 amount) external returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // mint adapter token
         _mint(to, amount);
+
+        // returns bool just for consistency with anyswap spec
         return true;
     }
 
-    // to support _anySwapOut (transferring onto bridge) (source chain)
+    // to support _anySwapOut / _anySwapIn
     function burn(address from, uint256 amount) external returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
         require(from != address(0), "Cannot burn from 0x0");
+
+        // burn adapter token
         _burn(from, amount);
+
+        // returns bool just for consistency with anyswap spec
         return true;
     }
 

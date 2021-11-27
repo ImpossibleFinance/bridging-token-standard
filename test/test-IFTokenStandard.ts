@@ -5,7 +5,7 @@ import { ethers } from "hardhat"
 
 import MockERC1363PayableMetadata from "../artifacts/contracts/mocks/MockERC1363PayableContract.sol/MockERC1363PayableContract.json"
 
-describe("IFTokenStandard", function () {
+describe("Test IFTokenStandard", function () {
   // unset timeout from the test
   this.timeout(0)
 
@@ -23,7 +23,7 @@ describe("IFTokenStandard", function () {
     await testToken.deployed()
   })
 
-  it("Should mint and burn", async function () {
+  it("Mint and burn", async function () {
     // mint
     await testToken.mint(owner.address, "1000000000000000000")
     // check balance
@@ -38,21 +38,21 @@ describe("IFTokenStandard", function () {
     expect(await testToken.balanceOf(owner.address)).to.equal("1500000000000000000")
   })
 
-  it("Can set trusted forwarder", async function () {
+  it("Set trusted forwarder", async function () {
     // set trusted forwarder
     await testToken.setTrustedForwarder(owner.address)
     // check trusted forwarder
     expect(await testToken.trustedForwarder()).to.equal(owner.address)
   })
 
-  it("Can check mint role", async function () {
+  it("Check mint role", async function () {
     // get role
     const minterRole = await testToken.MINTER_ROLE()
     // check role
     expect(await testToken.getRoleMemberCount(minterRole)).to.equal(1)
   })
 
-  it("Can transfer and call", async function () {
+  it("Transfer and call", async function () {
     // get interface of mock payable (1363) contract
     const erc1363PayableInterface = new ethers.utils.Interface(MockERC1363PayableMetadata.abi)
 
