@@ -74,10 +74,17 @@ describe("Test AnyswapV5RouterAdapter", function () {
   })
 
   it("Withdraw vault", async function () {
-    // mint underlying token
-    token.mint(owner.address, "100")
+    // set rate limiter params
+    await routerAdapter.setMaxQuota("1000") // 10e18
+    await routerAdapter.setQuotaPerSecond("100") // 10e17
 
-    // withdraw vault
+    // mint router adapter token to tester
+    routerAdapter.mint(owner.address, "100")
+
+    // mint underlying token to router adapter
+    token.mint(routerAdapter.address, "100")
+
+    // withdraw vault (burn router adapter token and transfer equivalent underlying to caller)
     routerAdapter.withdrawVault(
       owner.address, // from
       "100", // amount
