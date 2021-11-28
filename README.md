@@ -22,14 +22,19 @@ Security Note: EIP-2771 is a newer and more extensible standard, but relies on a
 
 **EIP1363 (payable token) is supported via the [official reference implementation library](https://github.com/vittominacori/erc1363-payable-token)**
 
-## Deploying
+## Token Deployment
+
+1. Deploy IFTokenStandard token
 
 ```
-# IFTokenStandard token
 NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.ts --network bsc_test
 ```
 
-### Minting token
+2. To enable EIP-2771, set trusted forwarder and integrate with a service such as Biconomy
+
+## Useful commands
+
+**Minting**
 
 ```
 TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
