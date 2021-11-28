@@ -28,7 +28,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
     // deploy AnyswapV4Router
     const AnyswapV4RouterFactory = await ethers.getContractFactory("AnyswapV4Router")
     routerV4 = await AnyswapV4RouterFactory.deploy(
-      // todo: fill in if necessary
+      // note: these are just placeholders for now
       owner.address, // sushiswap factory address
       owner.address, // address of wrapped native token (e.g., WETH)
       owner.address // address of MPC, the admin address that calls anySwapIn
