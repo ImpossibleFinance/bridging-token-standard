@@ -49,7 +49,7 @@ contract AnyswapV5BridgeAdapter is ERC20Burnable, ERC20Permit, ERC2771ContextUpd
         chainIdToDcrm[chainId] = dcrmAddress;
     }
 
-    // todo: _beforeTokenTransfer override
+    // todo: rate limit
 
     // bridge (custom adapter)
     function bridge(uint256 amount, uint256 chainId) public returns (bool) {
