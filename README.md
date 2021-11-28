@@ -32,6 +32,10 @@ NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.t
 
 2. To enable EIP-2771, set trusted forwarder and integrate with a service such as Biconomy
 
+```
+TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTrustedForwarder.ts --network bsc_test
+```
+
 ## Useful commands
 
 **Minting**
