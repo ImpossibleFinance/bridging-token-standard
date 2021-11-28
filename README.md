@@ -9,6 +9,8 @@ The token supports the following bridges via our adapters:
 
 ## Token Features
 
+**EIP1363 (payable token) is supported via the [official reference implementation library](https://github.com/vittominacori/erc1363-payable-token)**
+
 **Meta-transactions**
 
 Our token supports two types of meta-transactions:
@@ -19,8 +21,6 @@ Our token supports two types of meta-transactions:
 EIP-2612 and EIP-2771 are both standards for enabling meta-transactions. Both are supported for compatibility.
 
 Security Note: EIP-2771 is a newer and more extensible standard, but relies on a trusted forwarder contract. The logic in the trusted forwarder contract must be verified for correctness.
-
-**EIP1363 (payable token) is supported via the [official reference implementation library](https://github.com/vittominacori/erc1363-payable-token)**
 
 ## Token Deployment
 
