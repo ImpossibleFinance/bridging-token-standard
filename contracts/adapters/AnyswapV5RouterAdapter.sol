@@ -52,7 +52,7 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         require(underlying != address(0x0) && underlying != address(this), "Underlying invalid");
 
         // consume flow quota (rate limit)
-        consumeUserQuota(to, FlowDirection.OUT, amount);
+        consumeQuotaOfUser(to, FlowDirection.OUT, amount);
 
         // mint adapter token
         _mint(to, amount);
@@ -71,7 +71,7 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
 
         // consume flow quota (rate limit)
-        consumeUserQuota(to, FlowDirection.IN, amount);
+        consumeQuotaOfUser(to, FlowDirection.IN, amount);
 
         // burn adapter token
         _burn(from, amount);

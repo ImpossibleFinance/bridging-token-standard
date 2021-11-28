@@ -55,8 +55,9 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
   it("Low level: deposit vault", async function () {
     // set rate limiter params
-    await routerAdapter.setMaxQuota("1000") // 10e18
-    await routerAdapter.setQuotaPerSecond("100") // 10e17
+    await routerAdapter.setGlobalQuota("10000")
+    await routerAdapter.setUserQuota("1000")
+    await routerAdapter.setUserQuotaRegenRate("100")
 
     // mint tokens
     await token.mint(owner.address, "2000")
@@ -79,8 +80,9 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
   it("Low level: withdraw vault", async function () {
     // set rate limiter params
-    await routerAdapter.setMaxQuota("1000") // 10e18
-    await routerAdapter.setQuotaPerSecond("100") // 10e17
+    await routerAdapter.setGlobalQuota("10000")
+    await routerAdapter.setUserQuota("1000") // 10e18
+    await routerAdapter.setUserQuotaRegenRate("100") // 10e17
 
     // mint router adapter token to tester
     routerAdapter.mint(owner.address, "100")
@@ -107,8 +109,9 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
   it("High level: V4 anySwapOutUnderlying", async function () {
     // set rate limiter params
-    await routerAdapter.setMaxQuota("1000") // 10e18
-    await routerAdapter.setQuotaPerSecond("100") // 10e17
+    await routerAdapter.setGlobalQuota("10000")
+    await routerAdapter.setUserQuota("1000") // 10e18
+    await routerAdapter.setUserQuotaRegenRate("100") // 10e17
 
     // mint underlying token to tester
     token.mint(owner.address, "100")
@@ -137,8 +140,9 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
   it("High level: V4 anySwapInAuto (adapter underlying balance < amount)", async function () {
     // set rate limiter params
-    await routerAdapter.setMaxQuota("1000") // 10e18
-    await routerAdapter.setQuotaPerSecond("100") // 10e17
+    await routerAdapter.setGlobalQuota("10000")
+    await routerAdapter.setUserQuota("1000") // 10e18
+    await routerAdapter.setUserQuotaRegenRate("100") // 10e17
 
     // call anySwapOutUnderlying (transfer onto bridge)
     routerV4.anySwapInAuto(
@@ -162,8 +166,9 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
   it("High level: V4 anySwapInAuto (adapter underlying balance >= amount)", async function () {
     // set rate limiter params
-    await routerAdapter.setMaxQuota("1000") // 10e18
-    await routerAdapter.setQuotaPerSecond("100") // 10e17
+    await routerAdapter.setGlobalQuota("10000")
+    await routerAdapter.setUserQuota("1000") // 10e18
+    await routerAdapter.setUserQuotaRegenRate("100") // 10e17
 
     // mint underlying token to adapter
     token.mint(routerAdapter.address, "100")
