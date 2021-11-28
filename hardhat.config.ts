@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 
-import { HardhatUserConfig, task } from "hardhat/config"
+import { HardhatUserConfig } from "hardhat/config"
 import "@nomiclabs/hardhat-etherscan"
 import "@nomiclabs/hardhat-waffle"
 import "@typechain/hardhat"
@@ -33,8 +33,7 @@ const config: HardhatUserConfig = {
       gasPrice: 11000000000,
       accounts: {
         // first address: 0x99cb319980e55f4737c848e01BB74b8DE7863683
-        mnemonic:
-          "option skill video cause achieve joy section refuse infant goose any check",
+        mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
       },
     },
     bsc_main: {
@@ -49,8 +48,7 @@ const config: HardhatUserConfig = {
       url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
         // first address: 0x99cb319980e55f4737c848e01BB74b8DE7863683
-        mnemonic:
-          "option skill video cause achieve joy section refuse infant goose any check",
+        mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
       },
     },
     eth_main: {
