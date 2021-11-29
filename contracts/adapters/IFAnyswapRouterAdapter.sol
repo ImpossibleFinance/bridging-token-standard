@@ -118,7 +118,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     function emergencyTokenRetrieve(address token) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
 
-        // cannot be sale tokens
+        // cannot be underlying tokens
         require(token != underlying, "Cannot retrieve underlying");
 
         uint256 tokenBalance = ERC20(token).balanceOf(address(this));
