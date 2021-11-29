@@ -38,7 +38,7 @@ NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.t
 TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTrustedForwarder.ts --network bsc_test
 ```
 
-## Bridge setup
+## Bridge adapter setup
 
 1. Deploy AnyswapRouterAdapter
 
