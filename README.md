@@ -55,17 +55,13 @@ ADAPTER=0x... ROUTER=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-gran
 3. Set quotas on router adapter
 
 ```
-
+ADAPTER=0x... GLOBAL_QUOTA=10000 USER_QUOTA=1000 USER_QUOTA_REGEN_RATE=10 GLOBAL_QUOTA_REGEN_RATE=10 npx hardhat run ./scripts/IFAnyswapRouterAdapter-setQuotas.ts --network bsc_test
 ```
 
 ## Useful commands
 
 **Minting**
 
-````
-
-TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
-
 ```
-
+TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
 ```
