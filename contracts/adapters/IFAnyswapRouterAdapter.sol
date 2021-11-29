@@ -52,7 +52,6 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
         // consume flow quota (rate limit)
         consumeQuotaOfUser(to, FlowDirection.OUT, amount);
-
         // mint adapter token
         _mint(to, amount);
 
@@ -71,7 +70,6 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
         // consume flow quota (rate limit)
         consumeQuotaOfUser(to, FlowDirection.IN, amount);
-
         // burn adapter token
         _burn(from, amount);
         // transfer underlying to user
@@ -84,10 +82,8 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     // to support _anySwapIn (transferring off of bridge) (dest chain)
     function mint(address to, uint256 amount) external returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-
         // mint adapter token
         _mint(to, amount);
-
         // returns bool just for consistency with anyswap spec
         return true;
     }
@@ -96,10 +92,8 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     function burn(address from, uint256 amount) external returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
         require(from != address(0), "Cannot burn from 0x0");
-
         // burn adapter token
         _burn(from, amount);
-
         // returns bool just for consistency with anyswap spec
         return true;
     }
@@ -117,15 +111,12 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     // retrieve tokens erroneously sent in to this address
     function emergencyTokenRetrieve(address token) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
-
         // cannot be underlying tokens
         require(token != underlying, "Cannot retrieve underlying");
-
+        // get balance of token
         uint256 tokenBalance = ERC20(token).balanceOf(address(this));
-
         // transfer all
         ERC20(token).safeTransfer(_msgSender(), tokenBalance);
-
         // emit
         emit EmergencyTokenRetrieve(_msgSender(), tokenBalance);
     }
