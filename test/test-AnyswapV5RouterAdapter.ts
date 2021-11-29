@@ -41,11 +41,10 @@ describe("Test AnyswapV5RouterAdapter", function () {
     await routerV4.deployed()
 
     // deploy AnyswapV5RouterAdapter
-    const AnyswapV5RouterAdapterFactory = await ethers.getContractFactory("AnyswapV5RouterAdapter")
-    routerAdapter = await AnyswapV5RouterAdapterFactory.deploy(
+    const AnyswapRouterAdapterFactory = await ethers.getContractFactory("AnyswapRouterAdapter")
+    routerAdapter = await AnyswapRouterAdapterFactory.deploy(
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
-      routerV4.address, // router
       token.address // underlying
     )
     await routerAdapter.deployed()

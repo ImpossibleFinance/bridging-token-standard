@@ -9,14 +9,14 @@ import "../library/ERC2771ContextUpdateable.sol";
 import "../library/FlowLimiter.sol";
 
 /**
- * @dev Anyswap V5 router adapter, written by IF.
+ * @dev Anyswap router adapter, written by IF. Compatible with Anyswap Router V4 and V5.
  *
  *      For reference:
  *          Anyswap ERC20 (which this adapter replaces): https://github.com/connext/chaindata/blob/main/AnyswapV5ERC20.sol
  *          Anyswap V5 Router: https://github.com/anyswap/anyswap-v1-core/blob/master/contracts/AnyswapV5Router.sol
  */
 /* solhint-disable not-rely-on-time */
-contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
+contract AnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
     using SafeERC20 for ERC20;
 
     // CONSTS
@@ -25,8 +25,6 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
     // VARS
 
-    // address of AnyswapV5Router contract
-    address public immutable router;
     // underlying currency
     address public immutable underlying;
 
@@ -38,10 +36,8 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     constructor(
         string memory _name,
         string memory _symbol,
-        address _router,
         address _underlying
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
-        router = _router;
         underlying = _underlying;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
