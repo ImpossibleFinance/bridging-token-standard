@@ -30,6 +30,10 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     // underlying currency
     address public immutable underlying;
 
+    // EVENTS
+
+    event EmergencyTokenRetrieve(address indexed sender, uint256 amount);
+
     // constructor
     constructor(
         string memory _name,
@@ -113,5 +117,21 @@ contract AnyswapV5RouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
     function _msgData() internal view override(Context, ERC2771ContextUpdateable) returns (bytes calldata) {
         return ERC2771ContextUpdateable._msgData();
+    }
+
+    // retrieve tokens erroneously sent in to this address
+    function emergencyTokenRetrieve(address token) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
+
+        // cannot be sale tokens
+        require(token != underlying, "Cannot retrieve underlying");
+
+        uint256 tokenBalance = ERC20(token).balanceOf(address(this));
+
+        // transfer all
+        ERC20(token).safeTransfer(_msgSender(), tokenBalance);
+
+        // emit
+        emit EmergencyTokenRetrieve(_msgSender(), tokenBalance);
     }
 }

@@ -210,4 +210,27 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token.balanceOf(routerV4.address)).to.equal(0)
     expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
   })
+
+  it("Emergency token retrieve", async function () {
+    // deploy some other token
+    const TestTokenFactory = await ethers.getContractFactory("IFTokenStandard")
+    const token2 = await TestTokenFactory.deploy("Test Token 2", "TEST2")
+    await token2.deployed()
+
+    // mint underlying token to adapter
+    await token.connect(owner).mint(routerAdapter.address, "100")
+    // mint test2 token to adapter
+    await token2.connect(owner).mint(routerAdapter.address, "100")
+
+    // attempt retrievals
+    await routerAdapter.emergencyTokenRetrieve(token2.address)
+    expectRevert.unspecified(routerAdapter.emergencyTokenRetrieve(token.address))
+
+    // check final balances on owner
+    expect(await token.balanceOf(owner.address)).to.equal(0)
+    expect(await token2.balanceOf(owner.address)).to.equal(100)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(100)
+    expect(await token2.balanceOf(routerAdapter.address)).to.equal(0)
+  })
 })
