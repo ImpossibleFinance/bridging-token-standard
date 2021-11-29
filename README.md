@@ -24,7 +24,7 @@ EIP-2612 and EIP-2771 are both standards for enabling meta-transactions. Both ar
 
 Note: EIP-2771 is a newer and more extensible standard, but relies on a trusted forwarder contract. The logic in the trusted forwarder contract **must be verified for correctness**.
 
-## Token Deployment
+## Token setup
 
 1. Deploy IFTokenStandard token
 
@@ -38,10 +38,34 @@ NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.t
 TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTrustedForwarder.ts --network bsc_test
 ```
 
+## Bridge setup
+
+1. Deploy AnyswapRouterAdapter
+
+```
+NAME="Foo Token - Anyswap" SYMBOL="anyFOO" UNDERLYING=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
+```
+
+2. Give router permissions for Anyswap Router on newly deployed AnyswapRouterAdapter
+
+```
+ADAPTER=0x... ROUTER=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-grantRole-router.ts --network bsc_test
+```
+
+3. Set quotas on router adapter
+
+```
+
+```
+
 ## Useful commands
 
 **Minting**
 
-```
+````
+
 TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
+
+```
+
 ```

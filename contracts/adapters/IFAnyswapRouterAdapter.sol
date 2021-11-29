@@ -16,7 +16,7 @@ import "../library/FlowLimiter.sol";
  *          Anyswap V5 Router: https://github.com/anyswap/anyswap-v1-core/blob/master/contracts/AnyswapV5Router.sol
  */
 /* solhint-disable not-rely-on-time */
-contract AnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
+contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, FlowLimiter {
     using SafeERC20 for ERC20;
 
     // CONSTS
@@ -39,7 +39,6 @@ contract AnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable, F
         address _underlying
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
         underlying = _underlying;
-
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
