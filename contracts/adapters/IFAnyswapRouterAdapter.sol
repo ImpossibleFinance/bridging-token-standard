@@ -129,12 +129,23 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 }
 
 contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
+    // VARS
+
+    // underlying currency that bridge mints on destination chain
+    // if not set, then uses `underlying`
+    address public underlyingBridgeOut;
+
     // constructor
     constructor(
         string memory _name,
         string memory _symbol,
         address _underlying
     ) IFAnyswapRouterAdapter(_name, _symbol, _underlying) {}
+
+    function setUnderlyingBridgeOut(address _underlyingBridgeOut) external {
+        require(underlyingBridgeOut == address(0x0), "Underlying bridge out already set");
+        underlyingBridgeOut = _underlyingBridgeOut;
+    }
 
     // also include a burn of underlying token
     function depositVault(uint256 amount, address to) external override returns (uint256) {
@@ -170,8 +181,12 @@ contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
     function mint(address to, uint256 amount) external override returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
 
-        // mint underlying
-        IMintableBurnableToken(underlying).mint(to, amount);
+        // mints underlying
+        if (underlyingBridgeOut != address(0)) {
+            IMintableBurnableToken(underlyingBridgeOut).mint(to, amount);
+        } else {
+            IMintableBurnableToken(underlying).mint(to, amount);
+        }
 
         // returns bool for consistency with anyswap spec
         return true;
