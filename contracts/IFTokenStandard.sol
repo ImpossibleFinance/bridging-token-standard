@@ -18,7 +18,7 @@ contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit
         _setupRole(MINTER_ROLE, _msgSender());
     }
 
-    function mint(address to, uint256 amount) public {
+    function mint(address to, uint256 amount) external {
         require(hasRole(MINTER_ROLE, _msgSender()), "Must have minter role");
         _mint(to, amount);
     }

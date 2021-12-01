@@ -40,8 +40,8 @@ describe("Test AnyswapV5RouterAdapter", function () {
     )
     await routerV4.deployed()
 
-    // deploy AnyswapV5RouterAdapter
-    const IFAnyswapRouterAdapterFactory = await ethers.getContractFactory("IFAnyswapRouterAdapter")
+    // deploy router adapter
+    const IFAnyswapRouterAdapterFactory = await ethers.getContractFactory("IFAnyswapRouterAdapterMintBurnUnderlying")
     routerAdapter = await IFAnyswapRouterAdapterFactory.deploy(
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
@@ -56,7 +56,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
   //// low level tests from router adapter
 
   it("Low level: deposit vault", async function () {
-    // grant router role to tester for low level test
+    // grant router role to tester
     await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
 
     // set rate limiter params
@@ -84,7 +84,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
   })
 
   it("Low level: withdraw vault", async function () {
-    // grant router role to tester for low level test
+    // grant router role to tester
     await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
 
     // set rate limiter params
@@ -93,7 +93,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
     await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
 
     // mint router adapter token to tester
-    await routerAdapter.connect(mpc).mint(tester.address, "100")
+    await routerAdapter.connect(mpc).mintAdapterToken(tester.address, "100")
 
     // mint underlying token to router adapter
     await token.connect(owner).mint(routerAdapter.address, "100")
@@ -107,11 +107,11 @@ describe("Test AnyswapV5RouterAdapter", function () {
   })
 
   it("Low level: mint and burn", async function () {
-    // grant router role to tester for low level test
+    // grant router role to tester
     await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
 
     // mint
-    await routerAdapter.connect(mpc).mint(tester.address, "100")
+    await routerAdapter.connect(mpc).mintAdapterToken(tester.address, "100")
     // burn
     await routerAdapter.connect(mpc).burn(tester.address, "100")
   })
@@ -150,45 +150,15 @@ describe("Test AnyswapV5RouterAdapter", function () {
   })
 
   it("High level: V4 anySwapInAuto (adapter underlying balance < amount)", async function () {
-    // grant router role to tester for low level test
+    // grant router role to tester
     await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
+    // grant minter role to adapter
+    await token.connect(owner).grantRole(await token.MINTER_ROLE(), routerAdapter.address)
 
     // set rate limiter params
     await routerAdapter.connect(owner).setGlobalQuota("10000")
     await routerAdapter.connect(owner).setUserQuota("1000")
     await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
-
-    // call anySwapInAuto (transfer off of bridge)
-    await routerV4.connect(mpc).anySwapInAuto(
-      "0x0000000000000000000000000000000000000000000000000000000000000000", // txs (transaction hash from origin chain)
-      routerAdapter.address, // router adapter token
-      tester.address, // to
-      "100", // amount
-      1 // from chain ID
-    )
-
-    // check final balances on tester
-    expect(await token.balanceOf(tester.address)).to.equal(0)
-    expect(await routerAdapter.balanceOf(tester.address)).to.equal(100)
-    // check final balances on router adapter
-    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
-    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
-    // check final balances on router
-    expect(await token.balanceOf(routerV4.address)).to.equal(0)
-    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
-  })
-
-  it("High level: V4 anySwapInAuto (adapter underlying balance >= amount)", async function () {
-    // grant router role to tester for low level test
-    await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
-
-    // set rate limiter params
-    await routerAdapter.connect(owner).setGlobalQuota("10000")
-    await routerAdapter.connect(owner).setUserQuota("1000")
-    await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
-
-    // mint underlying token to adapter
-    await token.connect(owner).mint(routerAdapter.address, "100")
 
     // call anySwapInAuto (transfer off of bridge)
     await routerV4.connect(mpc).anySwapInAuto(
@@ -204,6 +174,40 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
     // check final balances on router adapter
     expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+    // check final balances on router
+    expect(await token.balanceOf(routerV4.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
+  })
+
+  it("High level: V4 anySwapInAuto (adapter underlying balance >= amount)", async function () {
+    // grant router role to tester
+    await routerAdapter.connect(owner).grantRole(await routerAdapter.ROUTER_ROLE(), mpc.address)
+    // grant minter role to adapter
+    await token.connect(owner).grantRole(await token.MINTER_ROLE(), routerAdapter.address)
+
+    // set rate limiter params
+    await routerAdapter.connect(owner).setGlobalQuota("10000")
+    await routerAdapter.connect(owner).setUserQuota("1000")
+    await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
+
+    // mint underlying token to adapter
+    await token.connect(owner).mint(routerAdapter.address, "420")
+
+    // call anySwapInAuto (transfer off of bridge)
+    await routerV4.connect(mpc).anySwapInAuto(
+      "0x0000000000000000000000000000000000000000000000000000000000000000", // txs (transaction hash from origin chain)
+      routerAdapter.address, // router adapter token
+      tester.address, // to
+      "100", // amount
+      1 // from chain ID
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(tester.address)).to.equal(100)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(420) // what we started with
     expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
     // check final balances on router
     expect(await token.balanceOf(routerV4.address)).to.equal(0)

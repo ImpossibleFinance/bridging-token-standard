@@ -8,6 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "../library/ERC2771ContextUpdateable.sol";
 import "../library/FlowLimiter.sol";
 
+interface IMintableToken {
+    function mint(address to, uint256 amount) external;
+}
+
 /**
  * @dev Anyswap router adapter, written by IF. Compatible with Anyswap Router V4 and V5.
  *
@@ -38,17 +42,17 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         string memory _symbol,
         address _underlying
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
+        require(_underlying != address(0x0) && _underlying != address(this), "Underlying invalid");
         underlying = _underlying;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     //// fns called by router
 
-    // transferring onto bridge (source chain)
+    // transferring onto bridge (called on source chain)
     // to support anySwapOutUnderlying
     function depositVault(uint256 amount, address to) external returns (uint256) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-        require(underlying != address(0x0) && underlying != address(this), "Underlying invalid");
 
         // consume flow quota (rate limit)
         consumeQuotaOfUser(to, FlowDirection.OUT, amount);
@@ -59,13 +63,13 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         return amount;
     }
 
-    // transferring off of bridge (dest chain)
+    // transferring off of bridge (called on dest chain)
     // to support anySwapInUnderlying / anySwapInAuto
     function withdrawVault(
         address from,
         uint256 amount,
         address to
-    ) external returns (uint256) {
+    ) external virtual returns (uint256) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
 
         // consume flow quota (rate limit)
@@ -80,11 +84,11 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     }
 
     // to support _anySwapIn (transferring off of bridge) (dest chain)
-    function mint(address to, uint256 amount) external returns (bool) {
+    function mint(address to, uint256 amount) external virtual returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
         // mint adapter token
         _mint(to, amount);
-        // returns bool just for consistency with anyswap spec
+        // returns bool for consistency with anyswap spec
         return true;
     }
 
@@ -94,7 +98,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         require(from != address(0), "Cannot burn from 0x0");
         // burn adapter token
         _burn(from, amount);
-        // returns bool just for consistency with anyswap spec
+        // returns bool for consistency with anyswap spec
         return true;
     }
 
@@ -119,5 +123,51 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         ERC20(token).safeTransfer(_msgSender(), tokenBalance);
         // emit
         emit EmergencyTokenRetrieve(_msgSender(), tokenBalance);
+    }
+}
+
+contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
+    // constructor
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _underlying
+    ) IFAnyswapRouterAdapter(_name, _symbol, _underlying) {}
+
+    // we don't burn here or transfer underlying
+    function withdrawVault(
+        address from,
+        uint256 amount,
+        address to
+    ) external override returns (uint256) {
+        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // consume flow quota (rate limit)
+        consumeQuotaOfUser(to, FlowDirection.IN, amount);
+
+        // return
+        return amount;
+    }
+
+    // we customize the standard mint function to instead mint underlying
+    function mint(address to, uint256 amount) external override returns (bool) {
+        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // mint underlying
+        IMintableToken(underlying).mint(to, amount);
+
+        // returns bool for consistency with anyswap spec
+        return true;
+    }
+
+    // provide a separate function for minting the adapter token specifically
+    function mintAdapterToken(address to, uint256 amount) external returns (bool) {
+        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // mint adapter token
+        _mint(to, amount);
+
+        // returns bool for consistency with anyswap spec
+        return true;
     }
 }
