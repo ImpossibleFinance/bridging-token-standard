@@ -8,7 +8,9 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "../library/ERC2771ContextUpdateable.sol";
 import "../library/FlowLimiter.sol";
 
-interface IMintableToken {
+interface IMintableBurnableToken {
+    function burn(uint256 amount) external;
+
     function mint(address to, uint256 amount) external;
 }
 
@@ -51,7 +53,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
     // transferring onto bridge (called on source chain)
     // to support anySwapOutUnderlying
-    function depositVault(uint256 amount, address to) external returns (uint256) {
+    function depositVault(uint256 amount, address to) external virtual returns (uint256) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
 
         // consume flow quota (rate limit)
@@ -134,6 +136,21 @@ contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
         address _underlying
     ) IFAnyswapRouterAdapter(_name, _symbol, _underlying) {}
 
+    // also include a burn of underlying token
+    function depositVault(uint256 amount, address to) external override returns (uint256) {
+        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // consume flow quota (rate limit)
+        consumeQuotaOfUser(to, FlowDirection.OUT, amount);
+        // mint adapter token
+        _mint(to, amount);
+        // burn underlying
+        IMintableBurnableToken(underlying).burn(amount);
+
+        // return
+        return amount;
+    }
+
     // we don't burn here or transfer underlying
     function withdrawVault(
         address from,
@@ -154,7 +171,7 @@ contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
 
         // mint underlying
-        IMintableToken(underlying).mint(to, amount);
+        IMintableBurnableToken(underlying).mint(to, amount);
 
         // returns bool for consistency with anyswap spec
         return true;

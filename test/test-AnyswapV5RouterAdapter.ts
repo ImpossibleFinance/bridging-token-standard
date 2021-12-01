@@ -66,6 +66,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
     // mint tokens
     await token.connect(owner).mint(tester.address, "2000")
+    await token.connect(owner).mint(routerAdapter.address, "2000")
 
     // deposit vault (mint router adapter token to tester)
     await routerAdapter.connect(mpc).depositVault("100", tester.address)
@@ -142,7 +143,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token.balanceOf(tester.address)).to.equal(0)
     expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
     // check final balances on router adapter
-    expect(await token.balanceOf(routerAdapter.address)).to.equal(100)
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
     expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
     // check final balances on router
     expect(await token.balanceOf(routerV4.address)).to.equal(0)
