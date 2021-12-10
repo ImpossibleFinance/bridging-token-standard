@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "hardhat/console.sol";
+
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
@@ -12,6 +14,14 @@ interface IMintableBurnableToken {
     function burn(uint256 amount) external;
 
     function mint(address to, uint256 amount) external;
+
+    function transfer(address recipient, uint256 amount) external returns (bool);
+
+    // function transferFrom(
+    //     address sender,
+    //     address recipient,
+    //     uint256 amount
+    // ) external returns (bool);
 }
 
 /**
@@ -129,6 +139,11 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 }
 
 contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
+    // CONSTANTS
+
+    // burn address used in case `burn` is not callable on underlying token contract
+    address public constant FALLBACK_BURN_ADDRESS = address(0xDEAD);
+
     // VARS
 
     // underlying currency that bridge mints on destination chain
@@ -155,8 +170,18 @@ contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
         consumeQuotaOfUser(to, FlowDirection.OUT, amount);
         // mint adapter token
         _mint(to, amount);
+
         // burn underlying
-        IMintableBurnableToken(underlying).burn(amount);
+        try IMintableBurnableToken(underlying).burn(amount) {
+            // burned via token's `burn` function
+        } catch {
+            try IMintableBurnableToken(underlying).transfer(FALLBACK_BURN_ADDRESS, amount) {
+                // if burn is a privileged function on token,
+                // artifically burn by sending to a specified burn address
+            } catch {
+                revert("Burn failed");
+            }
+        }
 
         // return
         return amount;

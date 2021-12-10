@@ -237,4 +237,70 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token.balanceOf(routerAdapter.address)).to.equal(100)
     expect(await token2.balanceOf(routerAdapter.address)).to.equal(0)
   })
+
+  it.only("Compatibity with AnyswapV5ERC20", async function () {
+    //// SET UP ANYSWAP TOKEN
+
+    // deploy anyswap erc20 token
+    const TestTokenFactory = await ethers.getContractFactory("AnyswapV5ERC20")
+    const token2 = await TestTokenFactory.deploy(
+      "Anyswap Foo Token", // name
+      "anyFOO", // symbol
+      18, // decimals
+      token.address, // underlying token
+      mpc.address // vault
+    )
+    await token2.deployed()
+
+    // init vault
+    await token2.connect(mpc).initVault(mpc.address)
+
+    //// SET UP ROUTER ADAPTER (overwrite default one)
+
+    // deploy router adapter (for anyswap token)
+    const IFAnyswapRouterAdapterFactory = await ethers.getContractFactory("IFAnyswapRouterAdapterMintBurnUnderlying")
+    routerAdapter = await IFAnyswapRouterAdapterFactory.deploy(
+      "Any Bridge Wrapper - Test Token", // name of adapter token
+      "anyTEST", // symbol of adapter token
+      token2.address // underlying
+    )
+    await routerAdapter.deployed()
+
+    // grant router role to router
+    await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), routerV4.address)
+
+    // set rate limiter params
+    await routerAdapter.connect(owner).setGlobalQuota("10000")
+    await routerAdapter.connect(owner).setUserQuota("1000")
+    await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
+
+    //// TEST
+
+    // mint underlying (anyswap) token to tester
+    await token2.connect(mpc).mint(tester.address, "100")
+
+    // tester approves to router
+    await token2.connect(tester).approve(routerV4.address, "100")
+
+    // call anySwapOutUnderlying (transfer onto bridge)
+    await routerV4.connect(tester).anySwapOutUnderlying(
+      routerAdapter.address, // router adapter token
+      tester.address, // to
+      "100", // amount
+      56 // to chain ID
+    )
+
+    // check final balances on tester
+    expect(await token2.balanceOf(tester.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
+    // check final balances on router adapter
+    expect(await token2.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+    // check final balances on router
+    expect(await token2.balanceOf(routerV4.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerV4.address)).to.equal(0)
+    // check final balances at 0xDEAD
+    expect(await token2.balanceOf("0x000000000000000000000000000000000000DEAD")).to.equal(100)
+    expect(await routerAdapter.balanceOf("0x000000000000000000000000000000000000DEAD")).to.equal(0)
+  })
 })
