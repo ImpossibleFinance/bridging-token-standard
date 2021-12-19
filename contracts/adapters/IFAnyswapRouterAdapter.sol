@@ -37,26 +37,97 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
     // CONSTS
 
+    // router role
     bytes32 public constant ROUTER_ROLE = keccak256("ROUTER_ROLE");
+    // burn address used in case `burn` is not callable on underlying token contract
+    address public constant FALLBACK_BURN_ADDRESS = address(0xDEAD);
 
     // VARS
 
     // underlying currency
     address public immutable underlying;
 
+    // underlying currency that bridge mints on destination chain
+    // if not set, then uses `underlying`
+    address public underlyingBridgeOut;
+
+    // if true, then operate in locking mode, else operate in mint-burn mode
+    bool public lockElseMintBurn;
+
     // EVENTS
 
+    event SetUnderlyingBridgeOut(address indexed underlyingBridgeOut);
+    event SetMode(bool indexed lockElseMintBurn);
+    event MintAdapterToken(address indexed to, uint256 amount);
+    event WithdrawAccumulated(address indexed sender, uint256 amount);
     event EmergencyTokenRetrieve(address indexed sender, uint256 amount);
 
     // constructor
     constructor(
         string memory _name,
         string memory _symbol,
-        address _underlying
+        address _underlying,
+        bool _lockElseMintBurn
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
         require(_underlying != address(0x0) && _underlying != address(this), "Underlying invalid");
+
         underlying = _underlying;
+        lockElseMintBurn = _lockElseMintBurn;
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    //// admin
+
+    // for setting underlying token on bridge out operation
+    function setUnderlyingBridgeOut(address _underlyingBridgeOut) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
+
+        require(underlyingBridgeOut == address(0x0), "Underlying bridge out already set");
+        underlyingBridgeOut = _underlyingBridgeOut;
+
+        // emit
+        emit SetUnderlyingBridgeOut(underlyingBridgeOut);
+    }
+
+    // for setting bridge adapter mode
+    function setMode(bool _lockElseMintBurn) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
+
+        lockElseMintBurn = _lockElseMintBurn;
+
+        // emit
+        emit SetMode(_lockElseMintBurn);
+    }
+
+    // provide a separate function for minting the adapter token specifically
+    function mintAdapterToken(address to, uint256 amount) external returns (bool) {
+        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
+
+        // mint adapter token
+        _mint(to, amount);
+
+        // emit
+        emit MintAdapterToken(to, amount);
+
+        // returns bool for consistency with anyswap spec
+        return true;
+    }
+
+    // admin function to withdraw accumulated token
+    function withdrawAccumulated() external returns (bool) {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
+
+        // get balance of token
+        uint256 tokenBalance = ERC20(underlying).balanceOf(address(this));
+        // transfer all
+        ERC20(underlying).safeTransfer(_msgSender(), tokenBalance);
+
+        // emit
+        emit WithdrawAccumulated(_msgSender(), tokenBalance);
+
+        // returns bool for consistency with anyswap spec
+        return true;
     }
 
     //// fns called by router
@@ -70,6 +141,21 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         consumeQuotaOfUser(to, FlowDirection.OUT, amount);
         // mint adapter token
         _mint(to, amount);
+
+        // if burn, also include a burn of underlying token
+        if (!lockElseMintBurn) {
+            // burn underlying
+            try IMintableBurnableToken(underlying).burn(amount) {
+                // burned via token's `burn` function
+            } catch {
+                try IMintableBurnableToken(underlying).transfer(FALLBACK_BURN_ADDRESS, amount) {
+                    // if burn is a privileged function on token,
+                    // artifically burn by sending to a specified burn address
+                } catch {
+                    revert("Burn failed");
+                }
+            }
+        }
 
         // return
         return amount;
@@ -86,10 +172,14 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
 
         // consume flow quota (rate limit)
         consumeQuotaOfUser(to, FlowDirection.IN, amount);
-        // burn adapter token
-        _burn(from, amount);
-        // transfer underlying to user
-        ERC20(underlying).safeTransfer(to, amount);
+
+        // if locking mode, we burn here and transfer underlying
+        if (lockElseMintBurn) {
+            // burn adapter token
+            _burn(from, amount);
+            // transfer underlying to user
+            ERC20(underlying).safeTransfer(to, amount);
+        }
 
         // return
         return amount;
@@ -98,8 +188,20 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     // to support _anySwapIn (transferring off of bridge) (dest chain)
     function mint(address to, uint256 amount) external virtual returns (bool) {
         require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-        // mint adapter token
-        _mint(to, amount);
+
+        // if mint/burn, we customize the standard mint function to instead mint underlying
+        if (!lockElseMintBurn) {
+            // mints underlying
+            if (underlyingBridgeOut != address(0)) {
+                IMintableBurnableToken(underlyingBridgeOut).mint(to, amount);
+            } else {
+                IMintableBurnableToken(underlying).mint(to, amount);
+            }
+        } else {
+            // mint adapter token
+            _mint(to, amount);
+        }
+
         // returns bool for consistency with anyswap spec
         return true;
     }
@@ -135,96 +237,5 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         ERC20(token).safeTransfer(_msgSender(), tokenBalance);
         // emit
         emit EmergencyTokenRetrieve(_msgSender(), tokenBalance);
-    }
-}
-
-contract IFAnyswapRouterAdapterMintBurnUnderlying is IFAnyswapRouterAdapter {
-    // CONSTANTS
-
-    // burn address used in case `burn` is not callable on underlying token contract
-    address public constant FALLBACK_BURN_ADDRESS = address(0xDEAD);
-
-    // VARS
-
-    // underlying currency that bridge mints on destination chain
-    // if not set, then uses `underlying`
-    address public underlyingBridgeOut;
-
-    // constructor
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        address _underlying
-    ) IFAnyswapRouterAdapter(_name, _symbol, _underlying) {}
-
-    function setUnderlyingBridgeOut(address _underlyingBridgeOut) external {
-        require(underlyingBridgeOut == address(0x0), "Underlying bridge out already set");
-        underlyingBridgeOut = _underlyingBridgeOut;
-    }
-
-    // also include a burn of underlying token
-    function depositVault(uint256 amount, address to) external override returns (uint256) {
-        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-
-        // consume flow quota (rate limit)
-        consumeQuotaOfUser(to, FlowDirection.OUT, amount);
-        // mint adapter token
-        _mint(to, amount);
-
-        // burn underlying
-        try IMintableBurnableToken(underlying).burn(amount) {
-            // burned via token's `burn` function
-        } catch {
-            try IMintableBurnableToken(underlying).transfer(FALLBACK_BURN_ADDRESS, amount) {
-                // if burn is a privileged function on token,
-                // artifically burn by sending to a specified burn address
-            } catch {
-                revert("Burn failed");
-            }
-        }
-
-        // return
-        return amount;
-    }
-
-    // we don't burn here or transfer underlying
-    function withdrawVault(
-        address from,
-        uint256 amount,
-        address to
-    ) external override returns (uint256) {
-        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-
-        // consume flow quota (rate limit)
-        consumeQuotaOfUser(to, FlowDirection.IN, amount);
-
-        // return
-        return amount;
-    }
-
-    // we customize the standard mint function to instead mint underlying
-    function mint(address to, uint256 amount) external override returns (bool) {
-        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-
-        // mints underlying
-        if (underlyingBridgeOut != address(0)) {
-            IMintableBurnableToken(underlyingBridgeOut).mint(to, amount);
-        } else {
-            IMintableBurnableToken(underlying).mint(to, amount);
-        }
-
-        // returns bool for consistency with anyswap spec
-        return true;
-    }
-
-    // provide a separate function for minting the adapter token specifically
-    function mintAdapterToken(address to, uint256 amount) external returns (bool) {
-        require(hasRole(ROUTER_ROLE, _msgSender()), "Must have router role");
-
-        // mint adapter token
-        _mint(to, amount);
-
-        // returns bool for consistency with anyswap spec
-        return true;
     }
 }
