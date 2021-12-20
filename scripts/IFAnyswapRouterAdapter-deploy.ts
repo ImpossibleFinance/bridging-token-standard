@@ -6,20 +6,72 @@
 // Runtime Environment's members available in the global scope.
 import hre from "hardhat"
 
+import Create2Deployer from "../artifacts/contracts/library/Create2Deployer.sol/Create2Deployer.json"
+
+// IF cross chain create2 address
+const create2Address = "0x790DeEB2929201067a460974612c996D2A25183d"
+
 export async function main(): Promise<void> {
   // params
   const name: string = process.env.NAME || ""
   const symbol: string = process.env.SYMBOL || ""
   const underlying: string = process.env.UNDERLYING || ""
+  const lockElseMintBurn: boolean | null =
+    process.env.MODE === "lock" ? true : process.env.MODE === "mintBurn" ? false : null
+  const create2: number | null = process.env.CREATE2 ? parseInt(process.env.CREATE2) : null // create2 nonce
+
+  if (lockElseMintBurn === null) {
+    console.log("Invalid mode specified: please use `lock` or `mintBurn`")
+    return
+  }
+
+  if (create2 !== null && isNaN(create2)) {
+    console.log("Failed to parse create2 nonce - please use an integer")
+    return
+  }
 
   // We get the contract to deploy
   const IFAnyswapRouterAdapterFactory = await hre.ethers.getContractFactory("IFAnyswapRouterAdapter")
 
   // deploy token
-  const IFAnyswapRouterAdapter = await IFAnyswapRouterAdapterFactory.deploy(name, symbol, underlying)
+  let IFAnyswapRouterAdapter
+  if (create2) {
+    console.log("Deploying with create2 nonce", create2)
+    // get create2 contract
+    const create2DeployerContract = new hre.ethers.Contract(
+      create2Address, // IF cross chain create2 address
+      Create2Deployer.abi
+    )
 
-  // log deployed addresses
-  console.log("Anyswap router adapter deployed to ", IFAnyswapRouterAdapter.address)
+    const encoder = hre.ethers.utils.defaultAbiCoder
+    const encodePacked = hre.ethers.utils.solidityPack
+
+    const constructorCode = encodePacked(
+      ["bytes", "bytes"],
+      [IFAnyswapRouterAdapterFactory.bytecode, encoder.encode(["string", "string"], [name, symbol])]
+    )
+
+    // create2 deploy
+    IFAnyswapRouterAdapter = await create2DeployerContract.connect((await hre.ethers.getSigners())[0]).deploy(
+      constructorCode,
+      create2 // salt
+    )
+
+    // log deployed addresses
+    console.log(
+      "Deployed to ",
+      await ((await IFAnyswapRouterAdapter.wait()).events as { address: string; args: { addr: string } }[]).find(
+        (x) => x.address === create2Address
+      )?.args?.addr
+    )
+  } else {
+    console.log("Deploying without create2")
+    // normal deploy
+    IFAnyswapRouterAdapter = await IFAnyswapRouterAdapterFactory.deploy(name, symbol, underlying, lockElseMintBurn)
+
+    // log deployed addresses
+    console.log("Deployed to ", IFAnyswapRouterAdapter.address)
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

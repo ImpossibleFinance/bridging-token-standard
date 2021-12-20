@@ -29,7 +29,7 @@ Note: EIP-2771 is a newer and more extensible standard, but relies on a trusted 
 1. Deploy IFTokenStandard token
 
 ```
-NAME="Foo Token" SYMBOL="FOO" npx hardhat run ./scripts/IFTokenStandard-deploy.ts --network bsc_test
+NAME="Foo Token" SYMBOL="FOO" <CREATE2=nonce> npx hardhat run ./scripts/IFTokenStandard-deploy.ts --network bsc_test
 ```
 
 2. To enable EIP-2771, set trusted forwarder and integrate with a service such as Biconomy
@@ -43,7 +43,7 @@ TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTru
 1. Deploy AnyswapRouterAdapter
 
 ```
-NAME="Foo Token - Anyswap" SYMBOL="anyFOO" UNDERLYING=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
+NAME="Foo Token - Anyswap" SYMBOL="anyFOO" MODE=lock UNDERLYING=0x... <CREATE2=nonce> npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
 ```
 
 2. Give router permissions for Anyswap Router on newly deployed AnyswapRouterAdapter
