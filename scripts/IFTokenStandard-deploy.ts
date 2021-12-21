@@ -22,6 +22,9 @@ export async function main(): Promise<void> {
     return
   }
 
+  // set admin to deployer
+  const admin = (await hre.ethers.getSigners())[0].address
+
   // We get the contract to deploy
   const TokenFactory = await hre.ethers.getContractFactory("IFTokenStandard")
 
@@ -34,7 +37,7 @@ export async function main(): Promise<void> {
     const encoder = hre.ethers.utils.defaultAbiCoder
     const encodePacked = hre.ethers.utils.solidityPack
 
-    const encodedArguments = encoder.encode(["string", "string"], [name, symbol])
+    const encodedArguments = encoder.encode(["string", "string", "address"], [name, symbol, admin])
     const constructorCode = encodePacked(["bytes", "bytes"], [TokenFactory.bytecode, encodedArguments])
 
     console.log("Encoded arguments", encodedArguments)
@@ -55,7 +58,7 @@ export async function main(): Promise<void> {
   } else {
     console.log("Deploying without create2")
     // normal deploy
-    Token = await TokenFactory.deploy(name, symbol)
+    Token = await TokenFactory.deploy(name, symbol, admin)
 
     // log deployed addresses
     console.log("Deployed to ", Token.address)

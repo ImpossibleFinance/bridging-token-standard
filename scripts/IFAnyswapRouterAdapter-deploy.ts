@@ -16,13 +16,15 @@ export async function main(): Promise<void> {
   const name: string = process.env.NAME || ""
   const symbol: string = process.env.SYMBOL || ""
   const underlying: string = process.env.UNDERLYING || ""
-  const lockElseMintBurn = true // we hard code this to prevent confusion on output address when used with create2
   const create2: number | null = process.env.CREATE2 ? parseInt(process.env.CREATE2) : null // create2 nonce
 
   if (create2 !== null && isNaN(create2)) {
     console.log("Failed to parse create2 nonce - please use an integer")
     return
   }
+
+  // set admin to deployer
+  const admin = (await hre.ethers.getSigners())[0].address
 
   // We get the contract to deploy
   const IFAnyswapRouterAdapterFactory = await hre.ethers.getContractFactory("IFAnyswapRouterAdapter")
@@ -41,8 +43,8 @@ export async function main(): Promise<void> {
     const encodePacked = hre.ethers.utils.solidityPack
 
     const encodedArguments = encoder.encode(
-      ["string", "string", "address", "bool"],
-      [name, symbol, underlying, lockElseMintBurn]
+      ["string", "string", "address", "address"],
+      [name, symbol, underlying, admin]
     )
     const constructorCode = encodePacked(["bytes", "bytes"], [IFAnyswapRouterAdapterFactory.bytecode, encodedArguments])
 
@@ -64,7 +66,7 @@ export async function main(): Promise<void> {
   } else {
     console.log("Deploying without create2")
     // normal deploy
-    IFAnyswapRouterAdapter = await IFAnyswapRouterAdapterFactory.deploy(name, symbol, underlying, lockElseMintBurn)
+    IFAnyswapRouterAdapter = await IFAnyswapRouterAdapterFactory.deploy(name, symbol, underlying, admin)
 
     // log deployed addresses
     console.log("Deployed to ", IFAnyswapRouterAdapter.address)
