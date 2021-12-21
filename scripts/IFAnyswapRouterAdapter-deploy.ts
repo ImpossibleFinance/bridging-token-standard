@@ -16,14 +16,8 @@ export async function main(): Promise<void> {
   const name: string = process.env.NAME || ""
   const symbol: string = process.env.SYMBOL || ""
   const underlying: string = process.env.UNDERLYING || ""
-  const lockElseMintBurn: boolean | null =
-    process.env.MODE === "lock" ? true : process.env.MODE === "mintBurn" ? false : null
+  const lockElseMintBurn = true // we hard code this to prevent confusion on output address when used with create2
   const create2: number | null = process.env.CREATE2 ? parseInt(process.env.CREATE2) : null // create2 nonce
-
-  if (lockElseMintBurn === null) {
-    console.log("Invalid mode specified: please use `lock` or `mintBurn`")
-    return
-  }
 
   if (create2 !== null && isNaN(create2)) {
     console.log("Failed to parse create2 nonce - please use an integer")

@@ -43,7 +43,7 @@ TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTru
 1. Deploy AnyswapRouterAdapter
 
 ```
-NAME="Foo Token - Anyswap" SYMBOL="anyFOO" MODE=lock UNDERLYING=0x... <CREATE2=nonce> npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
+NAME="Foo Token - Anyswap" SYMBOL="anyFOO" UNDERLYING=0x... <CREATE2=nonce> npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
 ```
 
 2. Give router permissions for Anyswap Router on newly deployed AnyswapRouterAdapter
