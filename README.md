@@ -71,3 +71,9 @@ ADAPTER=0x... GLOBAL_QUOTA=10000 USER_QUOTA=1000 USER_QUOTA_REGEN_RATE=10 GLOBAL
 ```
 TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.ts --network bsc_test
 ```
+
+**Router adapter info**
+
+```
+ADAPTER=0x... npx hardhat run scripts/IFAnyswapRouterAdapter-getInfo.ts --network bsc_test
+```
