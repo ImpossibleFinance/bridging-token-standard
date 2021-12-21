@@ -34,10 +34,10 @@ export async function main(): Promise<void> {
     const encoder = hre.ethers.utils.defaultAbiCoder
     const encodePacked = hre.ethers.utils.solidityPack
 
-    const constructorCode = encodePacked(
-      ["bytes", "bytes"],
-      [TokenFactory.bytecode, encoder.encode(["string", "string"], [name, symbol])]
-    )
+    const encodedArguments = encoder.encode(["string", "string"], [name, symbol])
+    const constructorCode = encodePacked(["bytes", "bytes"], [TokenFactory.bytecode, encodedArguments])
+
+    console.log("Encoded arguments", encodedArguments)
 
     // create2 deploy
     Token = await create2DeployerContract.connect((await hre.ethers.getSigners())[0]).deploy(
