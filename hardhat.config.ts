@@ -32,8 +32,7 @@ const config: HardhatUserConfig = {
       chainId: 97,
       gasPrice: 11000000000,
       accounts: {
-        // first address: 0x99cb319980e55f4737c848e01BB74b8DE7863683
-        mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     bsc_main: {
@@ -41,26 +40,25 @@ const config: HardhatUserConfig = {
       chainId: 56,
       gasPrice: 5000000000,
       accounts: {
-        mnemonic: process.env.MAINNET_MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     eth_ropsten: {
       url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
-        // first address: 0x99cb319980e55f4737c848e01BB74b8DE7863683
-        mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     eth_main: {
       url: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
-        mnemonic: process.env.MAINNET_MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     polygon_main: {
       url: "https://polygon-rpc.com",
       accounts: {
-        mnemonic: process.env.MAINNET_MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     polygon_mumbai: {
@@ -68,22 +66,21 @@ const config: HardhatUserConfig = {
       url: "https://matic-testnet-archive-rpc.bwarelabs.com",
       gasPrice: 25000000000,
       accounts: {
-        // first address: 0x99cb319980e55f4737c848e01BB74b8DE7863683
-        mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     avax_main: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
       accounts: {
-        mnemonic: process.env.MAINNET_MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
     moonriver_main: {
       url: "https://rpc.moonriver.moonbeam.network",
       chainId: 1285,
       accounts: {
-        mnemonic: process.env.MAINNET_MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || "",
       },
     },
   },
