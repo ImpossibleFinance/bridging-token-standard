@@ -26,7 +26,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
 
     // deploy test token
     const TestTokenFactory = await ethers.getContractFactory("IFTokenStandard")
-    token = await TestTokenFactory.deploy("Test Token", "TEST")
+    token = await TestTokenFactory.deploy("Test Token", "TEST", owner.address)
     await token.deployed()
 
     // deploy AnyswapV4Router
@@ -46,7 +46,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
       token.address, // underlying
-      true // true - locking mode, false - mint burn mode
+      owner.address
     )
     await routerAdapter.deployed()
 
@@ -371,7 +371,7 @@ describe("Test AnyswapV5RouterAdapter", function () {
   it("Emergency token retrieve", async function () {
     // deploy some other token
     const TestTokenFactory = await ethers.getContractFactory("IFTokenStandard")
-    const token2 = await TestTokenFactory.deploy("Test Token 2", "TEST2")
+    const token2 = await TestTokenFactory.deploy("Test Token 2", "TEST2", owner.address)
     await token2.deployed()
 
     // mint underlying token to adapter
@@ -416,9 +416,12 @@ describe("Test AnyswapV5RouterAdapter", function () {
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
       token2.address, // underlying
-      false // true - locking mode, false - mint burn mode
+      owner.address
     )
     await routerAdapter.deployed()
+
+    // set mode
+    await routerAdapter.connect(owner).setMode(false) // mint-burn
 
     // grant router role to router
     await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), routerV4.address)
@@ -483,9 +486,12 @@ describe("Test AnyswapV5RouterAdapter", function () {
       "Any Bridge Wrapper - Test Token", // name of adapter token
       "anyTEST", // symbol of adapter token
       token2.address, // underlying
-      true // true - locking mode, false - mint burn mode
+      owner.address
     )
     await routerAdapter.deployed()
+
+    // set mode
+    await routerAdapter.connect(owner).setMode(true) // locking
 
     // grant router role to router
     await routerAdapter.grantRole(await routerAdapter.ROUTER_ROLE(), routerV4.address)

@@ -19,7 +19,7 @@ describe("Test IFTokenStandard", function () {
 
     // deploy test token
     const TestTokenFactory = await ethers.getContractFactory("IFTokenStandard")
-    testToken = await TestTokenFactory.deploy("Test Token", "TEST")
+    testToken = await TestTokenFactory.deploy("Test Token", "TEST", owner.address)
     await testToken.deployed()
   })
 
