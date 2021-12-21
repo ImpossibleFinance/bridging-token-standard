@@ -48,7 +48,10 @@ export async function main(): Promise<void> {
 
     const constructorCode = encodePacked(
       ["bytes", "bytes"],
-      [IFAnyswapRouterAdapterFactory.bytecode, encoder.encode(["string", "string"], [name, symbol])]
+      [
+        IFAnyswapRouterAdapterFactory.bytecode,
+        encoder.encode(["string", "string", "address", "bool"], [name, symbol, underlying, lockElseMintBurn]),
+      ]
     )
 
     // create2 deploy

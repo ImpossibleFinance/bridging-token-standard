@@ -72,6 +72,20 @@ const config: HardhatUserConfig = {
         mnemonic: "option skill video cause achieve joy section refuse infant goose any check",
       },
     },
+    avax_main: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      chainId: 43114,
+      accounts: {
+        mnemonic: process.env.MAINNET_MNEMONIC || "",
+      },
+    },
+    moonriver_main: {
+      url: "https://rpc.moonriver.moonbeam.network",
+      chainId: 1285,
+      accounts: {
+        mnemonic: process.env.MAINNET_MNEMONIC || "",
+      },
+    },
   },
 }
 
