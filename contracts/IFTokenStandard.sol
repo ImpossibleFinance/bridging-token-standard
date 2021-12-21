@@ -13,9 +13,9 @@ contract IFTokenStandard is ERC20Burnable, ERC2771ContextUpdateable, ERC20Permit
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     // constructor
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_name) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
+    constructor(string memory _name, string memory _symbol, address admin) ERC20(_name, _symbol) ERC20Permit(_name) {
+        _setupRole(DEFAULT_ADMIN_ROLE, admin);
+        _setupRole(MINTER_ROLE, admin);
     }
 
     function mint(address to, uint256 amount) external {

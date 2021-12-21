@@ -67,14 +67,13 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         string memory _name,
         string memory _symbol,
         address _underlying,
-        bool _lockElseMintBurn
+        address admin
     ) ERC20(_name, _symbol) ERC20Permit(_name) {
         require(_underlying != address(0x0) && _underlying != address(this), "Underlying invalid");
 
         underlying = _underlying;
-        lockElseMintBurn = _lockElseMintBurn;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
     //// admin
@@ -83,7 +82,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     function setUnderlyingBridgeOut(address _underlyingBridgeOut) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
 
-        require(underlyingBridgeOut == address(0x0), "Underlying bridge out already set");
+        require(underlyingBridgeOut == address(0x0), "Address already set");
         underlyingBridgeOut = _underlyingBridgeOut;
 
         // emit
@@ -145,9 +144,11 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         // if burn, also include a burn of underlying token
         if (!lockElseMintBurn) {
             // burn underlying
+            /* solhint-disable-next-line no-empty-blocks */
             try IMintableBurnableToken(underlying).burn(amount) {
                 // burned via token's `burn` function
             } catch {
+                /* solhint-disable no-empty-blocks */
                 try IMintableBurnableToken(underlying).transfer(FALLBACK_BURN_ADDRESS, amount) {
                     // if burn is a privileged function on token,
                     // artifically burn by sending to a specified burn address
