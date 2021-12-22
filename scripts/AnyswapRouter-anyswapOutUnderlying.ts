@@ -34,7 +34,7 @@ export async function main(): Promise<void> {
   )
 
   // log
-  console.log("Swapped out:", tx)
+  console.log("Swapped out:", tx.hash)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

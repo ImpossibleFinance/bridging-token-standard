@@ -78,6 +78,12 @@ TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.t
 ADAPTER=0x... npx hardhat run scripts/IFAnyswapRouterAdapter-getInfo.ts --network bsc_test
 ```
 
+**Approve**
+
+```
+TOKEN=0x... SPENDER=0x... AMOUNT=123 npx hardhat run scripts/IFTokenStandard-approve.ts --network bsc_test
+```
+
 **Anyswap out**
 
 ```
