@@ -46,10 +46,10 @@ TOKEN=0x... TRUSTED_FWDER=0x... npx hardhat run ./scripts/IFTokenStandard-setTru
 NAME="Foo Token - Anyswap" SYMBOL="anyFOO" UNDERLYING=0x... <CREATE2=nonce> npx hardhat run ./scripts/IFAnyswapRouterAdapter-deploy.ts --network bsc_test
 ```
 
-2. Set the adapter mode. By default the deploy script will create an adapter in `lock` mode. If `mint-burn` mode is desired, then run the following:
+2. Set the adapter mode. By default the deploy script will create an adapter in `mint-burn` mode. If `lock` mode is desired, then run the following:
 
 ```
-ADAPTER=0x... MODE=mintBurn npx hardhat run ./scripts/IFAnyswapRouterAdapter-setMode.ts --network bsc_test
+ADAPTER=0x... MODE=lock npx hardhat run ./scripts/IFAnyswapRouterAdapter-setMode.ts --network bsc_test
 ```
 
 3. Give router permissions for Anyswap Router on newly deployed AnyswapRouterAdapter
@@ -76,4 +76,10 @@ TOKEN=0x... TO=0x... AMOUNT=... npx hardhat run ./scripts/IFTokenStandard-mint.t
 
 ```
 ADAPTER=0x... npx hardhat run scripts/IFAnyswapRouterAdapter-getInfo.ts --network bsc_test
+```
+
+**Anyswap out**
+
+```
+ADAPTER=0x... ROUTER=0x... AMOUNT=123 DEST_CHAIN=1285 npx hardhat run scripts/AnyswapRouter-anyswapOutUnderlying.ts --network bsc_test
 ```

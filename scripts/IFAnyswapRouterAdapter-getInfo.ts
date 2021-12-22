@@ -22,6 +22,13 @@ export async function main(): Promise<void> {
     await adapterContract.connect((await hre.ethers.getSigners())[0]).underlyingBridgeOut()
   )
   console.log("lockElseMintBurn:", await adapterContract.connect((await hre.ethers.getSigners())[0]).lockElseMintBurn())
+
+  // get first router role
+  const routerRole = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("ROUTER_ROLE"))
+  console.log(
+    "First routerRole:",
+    await adapterContract.connect((await hre.ethers.getSigners())[0]).getRoleMember(routerRole, 0)
+  )
 }
 
 // We recommend this pattern to be able to use async/await everywhere
