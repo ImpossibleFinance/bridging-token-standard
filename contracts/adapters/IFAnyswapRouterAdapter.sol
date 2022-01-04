@@ -217,6 +217,57 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         return true;
     }
 
+    //// fns for liquidity management
+
+    function deposit(uint256 amount) external returns (uint256) {
+        // transfer in underlying
+        ERC20(underlying).safeTransferFrom(msg.sender, address(this), amount);
+
+        // mint adapter token
+        _mint(msg.sender, amount);
+
+        // if burn, also include a burn of underlying token
+        if (!lockElseMintBurn) {
+            // burn underlying
+            /* solhint-disable-next-line no-empty-blocks */
+            try IMintableBurnableToken(underlying).burn(amount) {
+                // burned via token's `burn` function
+            } catch {
+                /* solhint-disable no-empty-blocks */
+                try IMintableBurnableToken(underlying).transfer(FALLBACK_BURN_ADDRESS, amount) {
+                    // if burn is a privileged function on token,
+                    // artifically burn by sending to a specified burn address
+                } catch {
+                    revert("Burn failed");
+                }
+            }
+        }
+
+        // return
+        return amount;
+    }
+
+    function withdraw(uint256 amount) external returns (uint256) {
+        // burn adapter token
+        _burn(msg.sender, amount);
+
+        // if locking mode, we burn here and transfer underlying
+        if (lockElseMintBurn) {
+            // transfer underlying to user
+            ERC20(underlying).safeTransfer(msg.sender, amount);
+        } else {
+            // mints underlying
+            if (underlyingBridgeOut != address(0)) {
+                IMintableBurnableToken(underlyingBridgeOut).mint(msg.sender, amount);
+            } else {
+                IMintableBurnableToken(underlying).mint(msg.sender, amount);
+            }
+        }
+
+        // return
+        return amount;
+    }
+
     //// EIP2771 meta transactions
 
     function _msgSender() internal view override(Context, ERC2771ContextUpdateable) returns (address) {

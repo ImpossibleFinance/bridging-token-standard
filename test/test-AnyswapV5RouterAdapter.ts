@@ -530,4 +530,91 @@ describe("Test AnyswapV5RouterAdapter", function () {
     expect(await token2.balanceOf("0x000000000000000000000000000000000000DEAD")).to.equal(0)
     expect(await routerAdapter.balanceOf("0x000000000000000000000000000000000000DEAD")).to.equal(0)
   })
+
+  it("Deposits and withdraws (locking)", async function () {
+    // set mode
+    await routerAdapter.connect(owner).setMode(true) // locking
+
+    // set rate limiter params
+    await routerAdapter.connect(owner).setGlobalQuota("10000")
+    await routerAdapter.connect(owner).setUserQuota("1000")
+    await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
+
+    //// TEST
+
+    // mint underlying (anyswap) token to tester
+    await token.connect(owner).mint(tester.address, "100")
+
+    // tester approves to router
+    await token.connect(tester).approve(routerAdapter.address, "100")
+
+    // call deposit on adapter
+    await routerAdapter.connect(tester).deposit(
+      "100" // amount
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(tester.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(100)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(100)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+
+    // call withdraw on adapter
+    await routerAdapter.connect(tester).withdraw(
+      "100" // amount
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(tester.address)).to.equal(100)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+  })
+
+  it("Deposits and withdraws (mint burn)", async function () {
+    // set mode
+    await routerAdapter.connect(owner).setMode(false) // mint burn
+
+    // grant minter role to adapter
+    await token.connect(owner).grantRole(await token.MINTER_ROLE(), routerAdapter.address)
+
+    // set rate limiter params
+    await routerAdapter.connect(owner).setGlobalQuota("10000")
+    await routerAdapter.connect(owner).setUserQuota("1000")
+    await routerAdapter.connect(owner).setUserQuotaRegenRate("100")
+
+    //// TEST
+
+    // mint underlying (anyswap) token to tester
+    await token.connect(owner).mint(tester.address, "100")
+
+    // tester approves to router
+    await token.connect(tester).approve(routerAdapter.address, "100")
+
+    // call deposit on adapter
+    await routerAdapter.connect(tester).deposit(
+      "100" // amount
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(tester.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(100)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+
+    // call withdraw on adapter
+    await routerAdapter.connect(tester).withdraw(
+      "100" // amount
+    )
+
+    // check final balances on tester
+    expect(await token.balanceOf(tester.address)).to.equal(100)
+    expect(await routerAdapter.balanceOf(tester.address)).to.equal(0)
+    // check final balances on router adapter
+    expect(await token.balanceOf(routerAdapter.address)).to.equal(0)
+    expect(await routerAdapter.balanceOf(routerAdapter.address)).to.equal(0)
+  })
 })
