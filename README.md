@@ -58,7 +58,13 @@ ADAPTER=0x... MODE=lock npx hardhat run ./scripts/IFAnyswapRouterAdapter-setMode
 ADAPTER=0x... ROUTER=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-grantRole-router.ts --network bsc_test
 ```
 
-4. Set quotas on router adapter
+4. Give adapter permissions for minting token (on mint/burn chains only)
+
+```
+TOKEN=0x... ADAPTER=0x... npx hardhat run ./scripts/IFTokenStandard-grantRole-minter.ts --network bsc_test
+```
+
+5. Set quotas on router adapter
 
 ```
 ADAPTER=0x... GLOBAL_QUOTA=10000 USER_QUOTA=1000 USER_QUOTA_REGEN_RATE=10 GLOBAL_QUOTA_REGEN_RATE=10 npx hardhat run ./scripts/IFAnyswapRouterAdapter-setQuotas.ts --network bsc_test
