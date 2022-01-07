@@ -95,3 +95,9 @@ TOKEN=0x... SPENDER=0x... AMOUNT=123 npx hardhat run scripts/IFTokenStandard-app
 ```
 ADAPTER=0x... ROUTER=0x... AMOUNT=123 DEST_CHAIN=1285 npx hardhat run scripts/AnyswapRouter-anyswapOutUnderlying.ts --network bsc_test
 ```
+
+**Withdraw accumulated**
+
+```
+ADAPTER=0x... npx hardhat run ./scripts/IFAnyswapRouterAdapter-withdrawAccumulated.ts --network bsc_test
+```

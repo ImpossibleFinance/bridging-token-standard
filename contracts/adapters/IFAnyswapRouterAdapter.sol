@@ -114,7 +114,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
     }
 
     // admin function to withdraw accumulated token
-    function withdrawAccumulated() external returns (bool) {
+    function withdrawAccumulated() external returns (uint256) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Must have admin role");
 
         // get balance of token
@@ -125,7 +125,7 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         // emit
         emit WithdrawAccumulated(_msgSender(), tokenBalance);
 
-        return true;
+        return tokenBalance;
     }
 
     //// fns called by router
