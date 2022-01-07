@@ -125,7 +125,6 @@ contract IFAnyswapRouterAdapter is ERC20, ERC20Permit, ERC2771ContextUpdateable,
         // emit
         emit WithdrawAccumulated(_msgSender(), tokenBalance);
 
-        // returns bool for consistency with anyswap spec
         return true;
     }
 
