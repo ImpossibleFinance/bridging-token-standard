@@ -14,7 +14,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
  */
 /* solhint-disable not-rely-on-time */
 abstract contract FlowLimiter is AccessControlEnumerable {
-    
     struct QuotaInfo {
         uint256 lastUpdated;
         uint256 quotaUsed;
@@ -34,32 +33,33 @@ abstract contract FlowLimiter is AccessControlEnumerable {
     event SetGlobalQuotaRegenRate(address indexed caller, uint256 indexed oldRate, uint256 indexed newRate);
     event SetUserQuotaRegenRate(address indexed caller, uint256 indexed oldRate, uint256 indexed newRate);
 
-    function _min(uint256 a, uint256 b, uint256 c) internal pure returns (uint256) {
+    function _min(
+        uint256 a,
+        uint256 b,
+        uint256 c
+    ) internal pure returns (uint256) {
         return Math.min(Math.min(a, b), c);
     }
 
     function getMaxConsumable(address user) public view returns (uint256 maxConsumable) {
         QuotaInfo memory globalQuotaInfo = globalQuotaState;
         QuotaInfo memory userQuotaInfo = userQuotaState[user];
-        
+
         uint256 globalUnlocked = globalQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
         uint256 userUnlocked = userQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
 
-
         uint256 updatedGlobalConsumed = globalQuotaInfo.quotaUsed > globalUnlocked
-                                    ? globalQuotaInfo.quotaUsed - globalUnlocked
-                                    : 0;
+            ? globalQuotaInfo.quotaUsed - globalUnlocked
+            : 0;
         uint256 updatedUserConsumed = userQuotaInfo.quotaUsed > userUnlocked
-                                    ? userQuotaInfo.quotaUsed - userUnlocked
-                                    : 0;
+            ? userQuotaInfo.quotaUsed - userUnlocked
+            : 0;
 
-        maxConsumable = Math.min(
-            globalQuota - updatedGlobalConsumed,
-            userQuota - updatedUserConsumed
-        );
+        maxConsumable = Math.min(globalQuota - updatedGlobalConsumed, userQuota - updatedUserConsumed);
     }
 
-    function consumeQuotaOfUser( // TODO: rename to consumeuserquota
+    function consumeQuotaOfUser(
+        // TODO: rename to consumeuserquota
         address user,
         uint256 amount
     ) internal returns (uint256 maxConsumed) {
@@ -70,31 +70,21 @@ abstract contract FlowLimiter is AccessControlEnumerable {
         uint256 userUnlocked = userQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
 
         uint256 updatedGlobalConsumed = globalQuotaInfo.quotaUsed > globalUnlocked
-                                    ? globalQuotaInfo.quotaUsed - globalUnlocked
-                                    : 0;
+            ? globalQuotaInfo.quotaUsed - globalUnlocked
+            : 0;
         uint256 updatedUserConsumed = userQuotaInfo.quotaUsed > userUnlocked
-                                    ? userQuotaInfo.quotaUsed - userUnlocked
-                                    : 0;
+            ? userQuotaInfo.quotaUsed - userUnlocked
+            : 0;
 
-        maxConsumed = _min(
-            amount, 
-            globalQuota - updatedGlobalConsumed,
-            userQuota - updatedUserConsumed
-        );
+        maxConsumed = _min(amount, globalQuota - updatedGlobalConsumed, userQuota - updatedUserConsumed);
 
-        globalQuotaState = QuotaInfo({ 
-            quotaUsed: updatedGlobalConsumed + maxConsumed, 
-            lastUpdated: block.timestamp
-        });
-        userQuotaState[user] = QuotaInfo({ 
-            quotaUsed: updatedUserConsumed + maxConsumed, 
-            lastUpdated: block.timestamp 
-        });
+        globalQuotaState = QuotaInfo({quotaUsed: updatedGlobalConsumed + maxConsumed, lastUpdated: block.timestamp});
+        userQuotaState[user] = QuotaInfo({quotaUsed: updatedUserConsumed + maxConsumed, lastUpdated: block.timestamp});
     }
 
     function setGlobalQuota(uint256 _globalQuota) external onlyRole(DEFAULT_ADMIN_ROLE) {
         globalQuota = _globalQuota;
-        emit SetGlobalQuota(msg.sender, globalQuota, _globalQuota);   
+        emit SetGlobalQuota(msg.sender, globalQuota, _globalQuota);
     }
 
     function setUserQuota(uint256 _userQuota) external onlyRole(DEFAULT_ADMIN_ROLE) {

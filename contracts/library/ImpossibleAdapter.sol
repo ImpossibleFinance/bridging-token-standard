@@ -8,8 +8,9 @@ import "./FlowLimiter.sol";
 
 interface IMintableBurnableToken {
     function burn(uint256 amount) external;
+
     function mint(address to, uint256 amount) external;
-} 
+}
 
 contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
     using SafeERC20 for ERC20;
@@ -68,7 +69,7 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
 
         if (mode == Mode.MINTBURN) {
             IMintableBurnableToken(underlying).mint(msg.sender, burnAmount);
-        } else {    
+        } else {
             ERC20(underlying).safeTransfer(msg.sender, burnAmount);
         }
 
@@ -77,7 +78,10 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
     }
 
     function emergencyTokenRetrieve(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(token != underlying && mode == Mode.MINTBURN || token != address(this), "ImpossibleAdapter: BAD_TOKEN_ADDR");
+        require(
+            (token != underlying && mode == Mode.MINTBURN) || token != address(this),
+            "ImpossibleAdapter: BAD_TOKEN_ADDR"
+        );
         uint256 tokenBalance = ERC20(token).balanceOf(address(this));
         ERC20(token).safeTransfer(msg.sender, tokenBalance);
         emit EmergencyTokenRetrieve(msg.sender, tokenBalance);
