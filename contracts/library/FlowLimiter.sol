@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @dev Flow limiter by quota.
@@ -33,23 +34,62 @@ abstract contract FlowLimiter is AccessControlEnumerable {
     event SetGlobalQuotaRegenRate(address indexed caller, uint256 indexed oldRate, uint256 indexed newRate);
     event SetUserQuotaRegenRate(address indexed caller, uint256 indexed oldRate, uint256 indexed newRate);
 
-    constructor(
-        uint256 _globalQuota,
-        uint256 _userQuota,
-        uint256 _globalQuotaRegenRate,
-        uint256 _userQuotaRegenRate
-    ) {
-        globalQuota = _globalQuota;
-        userQuota = _userQuota;
-        globalQuotaRegenRate = _globalQuotaRegenRate;
-        userQuotaRegenRate = _userQuotaRegenRate;
+    function _min(uint256 a, uint256 b, uint256 c) internal pure returns (uint256) {
+        return Math.min(Math.min(a, b), c);
     }
 
-    function consumeQuotaOfUser(
+    function getMaxConsumable(address user) public view returns (uint256 maxConsumable) {
+        QuotaInfo memory globalQuotaInfo = globalQuotaState;
+        QuotaInfo memory userQuotaInfo = userQuotaState[user];
+        
+        uint256 globalUnlocked = globalQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
+        uint256 userUnlocked = userQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
+
+
+        uint256 updatedGlobalConsumed = globalQuotaInfo.quotaUsed > globalUnlocked
+                                    ? globalQuotaInfo.quotaUsed - globalUnlocked
+                                    : 0;
+        uint256 updatedUserConsumed = userQuotaInfo.quotaUsed > userUnlocked
+                                    ? userQuotaInfo.quotaUsed - userUnlocked
+                                    : 0;
+
+        maxConsumable = Math.min(
+            globalQuota - updatedGlobalConsumed,
+            userQuota - updatedUserConsumed
+        );
+    }
+
+    function consumeQuotaOfUser( // TODO: rename to consumeuserquota
         address user,
         uint256 amount
     ) internal returns (uint256 maxConsumed) {
+        QuotaInfo memory globalQuotaInfo = globalQuotaState;
+        QuotaInfo memory userQuotaInfo = userQuotaState[user];
 
+        uint256 globalUnlocked = globalQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
+        uint256 userUnlocked = userQuotaRegenRate * (block.timestamp - globalQuotaInfo.lastUpdated);
+
+        uint256 updatedGlobalConsumed = globalQuotaInfo.quotaUsed > globalUnlocked
+                                    ? globalQuotaInfo.quotaUsed - globalUnlocked
+                                    : 0;
+        uint256 updatedUserConsumed = userQuotaInfo.quotaUsed > userUnlocked
+                                    ? userQuotaInfo.quotaUsed - userUnlocked
+                                    : 0;
+
+        maxConsumed = _min(
+            amount, 
+            globalQuota - updatedGlobalConsumed,
+            userQuota - updatedUserConsumed
+        );
+
+        globalQuotaState = QuotaInfo({ 
+            quotaUsed: updatedGlobalConsumed + maxConsumed, 
+            lastUpdated: block.timestamp
+        });
+        userQuotaState[user] = QuotaInfo({ 
+            quotaUsed: updatedUserConsumed + maxConsumed, 
+            lastUpdated: block.timestamp 
+        });
     }
 
     function setGlobalQuota(uint256 _globalQuota) external onlyRole(DEFAULT_ADMIN_ROLE) {
