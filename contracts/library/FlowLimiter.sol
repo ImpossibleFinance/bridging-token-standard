@@ -58,11 +58,7 @@ abstract contract FlowLimiter is AccessControlEnumerable {
         maxConsumable = Math.min(globalQuota - updatedGlobalConsumed, userQuota - updatedUserConsumed);
     }
 
-    function consumeQuotaOfUser(
-        // TODO: rename to consumeuserquota
-        address user,
-        uint256 amount
-    ) internal returns (uint256 maxConsumed) {
+    function consumeUserQuota(address user, uint256 amount) internal returns (uint256 maxConsumed) {
         QuotaInfo memory globalQuotaInfo = globalQuotaState;
         QuotaInfo memory userQuotaInfo = userQuotaState[user];
 

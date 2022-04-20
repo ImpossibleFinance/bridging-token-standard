@@ -64,7 +64,7 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
     }
 
     function withdraw(uint256 amount) external returns (uint256) {
-        uint256 burnAmount = consumeQuotaOfUser(msg.sender, amount);
+        uint256 burnAmount = consumeUserQuota(msg.sender, amount);
         _burn(msg.sender, burnAmount);
 
         if (mode == Mode.MINTBURN) {
