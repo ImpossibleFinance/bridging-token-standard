@@ -21,7 +21,10 @@ export default describe("test ImpossibleAdapter", async () => {
   let dstAdapter: Contract
   let anyswapRouter: Contract
   let owner: SignerWithAddress
-  let defaultLimit: BigNumber = convToBN(5)
+
+  const flowLimit = convToBN(5)
+  const holdingAmt = convToBN(100)
+  const underlyingAmt = convToBN(10000)
 
   const MOCK_CHAINID = 0
 
@@ -44,9 +47,8 @@ export default describe("test ImpossibleAdapter", async () => {
     anyswapRouter = await RouterFactory.deploy(ZERO_ADDRESS, ZERO_ADDRESS, owner.address)
 
     const ERC20Factory = await ethers.getContractFactory("TestERC20")
-    const holdingAmt = convToBN(100)
-    srcUnderlying = await ERC20Factory.deploy(convToBN(10000))
-    dstUnderlying = await ERC20Factory.deploy(holdingAmt)
+    srcUnderlying = await ERC20Factory.deploy(underlyingAmt)
+    dstUnderlying = await ERC20Factory.deploy(underlyingAmt)
 
     await srcUnderlying.approve(anyswapRouter.address, MaxUint256)
     await dstUnderlying.approve(anyswapRouter.address, MaxUint256)
@@ -57,8 +59,8 @@ export default describe("test ImpossibleAdapter", async () => {
       `AnyTT`,
       srcUnderlying.address,
       Mode.LOCK,
-      defaultLimit,
-      defaultLimit,
+      flowLimit,
+      flowLimit,
       0,
       0
     )
@@ -68,8 +70,8 @@ export default describe("test ImpossibleAdapter", async () => {
       `AnyTT`,
       dstUnderlying.address,
       Mode.MINTBURN,
-      defaultLimit,
-      defaultLimit,
+      flowLimit,
+      flowLimit,
       0,
       0
     )
@@ -104,7 +106,7 @@ export default describe("test ImpossibleAdapter", async () => {
         .to.emit(srcAdapter, "Transfer") // burning adapter token
         .withArgs(owner.address, ZERO_ADDRESS, bridgeAmt[i])
 
-      const remainder = bridgeAmt[i].gte(defaultLimit) ? bridgeAmt[i].sub(defaultLimit) : _0
+      const remainder = bridgeAmt[i].gte(flowLimit) ? bridgeAmt[i].sub(flowLimit) : _0
 
       // called on dst chain
       expect(
@@ -119,10 +121,47 @@ export default describe("test ImpossibleAdapter", async () => {
         .to.emit(dstAdapter, "Transfer") // mints adapter
         .withArgs(ZERO_ADDRESS, owner.address, bridgeAmt[i])
         .to.emit(dstUnderlying, "Transfer") // mints underlying
-        .withArgs(ZERO_ADDRESS, owner.address, min(bridgeAmt[i], defaultLimit))
+        .withArgs(ZERO_ADDRESS, owner.address, min(bridgeAmt[i], flowLimit))
 
       expect(await dstAdapter.balanceOf(owner.address)).to.eq(remainder)
-      expect(await dstUnderlying.balanceOf(owner.address)).to.eq(min(bridgeAmt[i], defaultLimit))
+      const dstBalance = underlyingAmt.sub(holdingAmt).add(min(bridgeAmt[i], flowLimit))
+      expect(await dstUnderlying.balanceOf(owner.address)).to.eq(dstBalance)
+    })
+  }
+
+  for (let i: number = 0; i < bridgeAmt.length; i++) {
+    it(`test bridge dst to src ${i}`, async () => {
+      // called on dst chain
+      expect(await anyswapRouter.anySwapOutUnderlying(dstAdapter.address, owner.address, bridgeAmt[i], MOCK_CHAINID))
+        .to.emit(dstUnderlying, "Transfer") 
+        .withArgs(owner.address, dstAdapter.address, bridgeAmt[i])
+        .to.emit(dstUnderlying, "Transfer") // burn underlying
+        .withArgs(dstAdapter.address, ZERO_ADDRESS, bridgeAmt[i])
+        .to.emit(dstAdapter, "Transfer") // minting adapter token
+        .withArgs(ZERO_ADDRESS, owner.address, bridgeAmt[i])
+        .to.emit(dstAdapter, "Transfer") // burning adapter token
+        .withArgs(owner.address, ZERO_ADDRESS, bridgeAmt[i])
+
+      const remainder = bridgeAmt[i].gte(flowLimit) ? bridgeAmt[i].sub(flowLimit) : _0
+
+      // called on dst chain
+      expect(
+        await anyswapRouter.anySwapInAuto(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          srcAdapter.address,
+          owner.address,
+          bridgeAmt[i],
+          MOCK_CHAINID
+        )
+      )
+        .to.emit(srcAdapter, "Transfer") // mints adapter
+        .withArgs(ZERO_ADDRESS, owner.address, bridgeAmt[i])
+        .to.emit(srcUnderlying, "Transfer") // transfers underlying
+        .withArgs(srcAdapter.address, owner.address, min(bridgeAmt[i], flowLimit))
+
+      expect(await srcAdapter.balanceOf(owner.address)).to.eq(remainder)
+      const srcBalance = underlyingAmt.sub(holdingAmt).add(min(bridgeAmt[i], flowLimit))
+      expect(await srcUnderlying.balanceOf(owner.address)).to.eq(srcBalance)
     })
   }
 })
