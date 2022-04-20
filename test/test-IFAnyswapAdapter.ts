@@ -44,8 +44,9 @@ export default describe("test ImpossibleAdapter", async () => {
     anyswapRouter = await RouterFactory.deploy(ZERO_ADDRESS, ZERO_ADDRESS, owner.address)
 
     const ERC20Factory = await ethers.getContractFactory("TestERC20")
+    const holdingAmt = convToBN(100)
     srcUnderlying = await ERC20Factory.deploy(convToBN(10000))
-    dstUnderlying = await ERC20Factory.deploy(_0)
+    dstUnderlying = await ERC20Factory.deploy(holdingAmt)
 
     await srcUnderlying.approve(anyswapRouter.address, MaxUint256)
     await dstUnderlying.approve(anyswapRouter.address, MaxUint256)
@@ -73,6 +74,9 @@ export default describe("test ImpossibleAdapter", async () => {
       0
     )
 
+    await srcUnderlying.transfer(srcAdapter.address, holdingAmt)
+    await dstUnderlying.transfer(dstAdapter.address, holdingAmt)
+
     await srcAdapter.grantRole(
       "0x7a05a596cb0ce7fdea8a1e1ec73be300bdb35097c944ce1897202f7a13122eb2",
       anyswapRouter.address
@@ -90,7 +94,7 @@ export default describe("test ImpossibleAdapter", async () => {
   const bridgeAmt = [convToBN(2), convToBN(7)]
 
   for (let i: number = 0; i < bridgeAmt.length; i++) {
-    it(`test bridge ${i}`, async () => {
+    it(`test bridge src to dst ${i}`, async () => {
       // called on src chain
       expect(await anyswapRouter.anySwapOutUnderlying(srcAdapter.address, owner.address, bridgeAmt[i], MOCK_CHAINID))
         .to.emit(srcUnderlying, "Transfer")
@@ -112,6 +116,8 @@ export default describe("test ImpossibleAdapter", async () => {
           MOCK_CHAINID
         )
       )
+        .to.emit(dstAdapter, "Transfer") // mints adapter
+        .withArgs(ZERO_ADDRESS, owner.address, bridgeAmt[i])
         .to.emit(dstUnderlying, "Transfer") // mints underlying
         .withArgs(ZERO_ADDRESS, owner.address, min(bridgeAmt[i], defaultLimit))
 

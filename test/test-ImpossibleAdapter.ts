@@ -118,16 +118,16 @@ export default describe("test ImpossibleAdapter", async () => {
     let tx
 
     tx = await ifAdapter[0].deposit(amt)
-    expect((await tx.wait()).gasUsed).to.eq(110883) // 110883
+    expect((await tx.wait()).gasUsed).to.eq(110826) // 110826
 
     tx = await ifAdapter[0].withdraw(amt)
-    expect((await tx.wait()).gasUsed).to.eq(135992) // 135992
+    expect((await tx.wait()).gasUsed).to.eq(135987) // 135987
 
     tx = await ifAdapter[1].deposit(amt)
-    expect((await tx.wait()).gasUsed).to.eq(99052) // 99052
+    expect((await tx.wait()).gasUsed).to.eq(98995) // 98995
 
     tx = await ifAdapter[1].withdraw(amt)
-    expect((await tx.wait()).gasUsed).to.eq(139338) // 139338
+    expect((await tx.wait()).gasUsed).to.eq(139333) // 139333
   })
 
   it("test static quota", async () => {

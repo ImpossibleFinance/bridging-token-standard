@@ -12,6 +12,12 @@ interface IMintableBurnableToken {
     function mint(address to, uint256 amount) external;
 }
 
+/** 
+ @title Core bridging adapter token
+ @author Impossible Finance
+ @dev Bridging operations can only consume flow rate up to the limit
+ @dev No reverts will ever occur during flow consumption
+*/
 contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
     using SafeERC20 for ERC20;
 
@@ -51,7 +57,11 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
         userQuotaRegenRate = _userQuotaRegenRate;
     }
 
-    function deposit(uint256 amount) external returns (uint256) {
+    /** 
+     @notice Function to deposit underlying tokens and obtain adapter tokens
+     @param amount of tokens to deposit and amount of tokens minted
+     */
+    function deposit(uint256 amount) external {
         ERC20(underlying).safeTransferFrom(msg.sender, address(this), amount);
         _mint(msg.sender, amount);
 
@@ -60,11 +70,15 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
         }
 
         emit Deposit(msg.sender, amount);
-        return amount;
     }
 
-    function withdraw(uint256 amount) external returns (uint256) {
-        uint256 burnAmount = consumeUserQuota(msg.sender, amount);
+    /** 
+     @notice Function to burn adapter tokens to obtain underlying tokens
+     @param amount desired amount of adapter tokens to burn
+     @return burnAmount amount of adapter actually burned and amount of underlying received
+     */
+    function withdraw(uint256 amount) external returns (uint256 burnAmount) {
+        burnAmount = consumeUserQuota(msg.sender, amount);
         _burn(msg.sender, burnAmount);
 
         if (mode == Mode.MINTBURN) {
@@ -73,10 +87,14 @@ contract ImpossibleAdapter is ERC20, ERC20Permit, FlowLimiter {
             ERC20(underlying).safeTransfer(msg.sender, burnAmount);
         }
 
-        emit Withdraw(msg.sender, amount);
-        return burnAmount;
+        emit Withdraw(msg.sender, burnAmount);
     }
 
+    /** 
+     @notice Emergency function to retrieve other tokens mistakenly sent here
+     @dev Only admin role
+     @param token address of stuck token
+     */
     function emergencyTokenRetrieve(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(
             (token != underlying && mode == Mode.MINTBURN) || token != address(this),
